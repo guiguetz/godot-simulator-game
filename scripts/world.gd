@@ -49,7 +49,6 @@ func _ready() -> void:
 	add_to_group("world")
 	_rebuild_world()
 	if not Engine.is_editor_hint():
-		_terrain_paint.visible = false
 		_build_house()
 		_setup_demo_entities()
 		_scatter_decorations()
