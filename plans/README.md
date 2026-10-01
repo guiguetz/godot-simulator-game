@@ -29,6 +29,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [011](011-hitbox-hurtbox-combate.md) | Sistema de combate com Hitbox/Hurtbox | Proposto | Média | M |
 | [012](012-mochila-expansível.md) | Mochila expansível com progressão | Proposto | Média | M |
 | [013](013-shaders-animações.md) | Shaders e animações visuais | Proposto | Alta | G |
+| [014](014-tilemapdual-migração.md) | Migração para TileMapDual | Proposto | Alta | M |
 
 ## Estrutura de um plano
 
