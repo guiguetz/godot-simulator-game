@@ -11,10 +11,19 @@ nunca no wiki.
 
 | Documento | Assunto |
 |---|---|
+| [`world.md`](world.md) | Terreno, `walkable`/`tillable` e aração |
+| [`player.md`](player.md) | Movimento, colisão de pés e skins |
+| [`farming.md`](farming.md) | Aração, plantio, crescimento e colheita |
+| [`machines.md`](machines.md) | Aspersor, espantalho e pescador |
+| [`fishing.md`](fishing.md) | Minigame de pesca e peixes |
+| [`inventory-shop.md`](inventory-shop.md) | Inventário, hotbar, HUD e loja |
+| [`time-weather.md`](time-weather.md) | Relógio, dia/noite e clima |
+| [`save-load.md`](save-load.md) | Save/load do mundo e preferências |
+| [`audio.md`](audio.md) | SFX, música e chuva |
+| [`npcs.md`](npcs.md) | Criaturas e NPCs ambientais |
+| [`decor.md`](decor.md) | Modo decoração, casa e cenário |
 | [`github-projects.md`](github-projects.md) | Board, campos, labels, views e fluxo de trabalho |
 | [`workflow.md`](workflow.md) | Fluxos do dia a dia: assumir issue, criar novo, automações |
-| [`player.md`](player.md) | Movimento do personagem e caixa de andabilidade |
-| [`world.md`](world.md) | Terreno, `walkable`/`tillable` e aração com a enxada |
 | [`checkup.md`](checkup.md) | Checkup de consistência (planos, issues, board, labels) |
 | [`sync-wiki.md`](sync-wiki.md) | Como o wiki é gerado a partir de `docs/` |
 | [`adr/`](adr/README.md) | Decisões de arquitetura (ADRs) |
