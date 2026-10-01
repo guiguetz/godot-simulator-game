@@ -18,7 +18,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 |---|---|---|---|---|
 | [001](001-propriedade-tillable.md) | Propriedade `tillable` no terreno | Concluído | Média | P |
 | [002](002-menus-de-debug.md) | Menus de debug / controles internos | Proposto | Média | M |
-| [003](003-estrutura-de-testes-gdunit.md) | Estrutura de testes com gdUnit4 | Proposto | Alta | M |
+| [003](003-estrutura-de-testes-gdunit.md) | Estrutura de testes com gdUnit4 | Concluído | Alta | M |
 | [004](004-dividir-readme-em-docs.md) | Dividir README em docs/ por sistema | Em andamento | Baixa | P |
 | [005](005-checkup-de-consistencia.md) | Checkup de consistência (skill + automação) | Concluído | Média | P |
 | [006](006-refinos-agents-e-automacoes.md) | Refinos do AGENTS.md e automações de gestão | Concluído | Média | M |

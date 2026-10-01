@@ -1,6 +1,6 @@
 # 003 — Estrutura de testes com gdUnit4
 
-- **Status:** Proposto
+- **Status:** Concluído
 - **Prioridade:** Alta
 - **Esforço:** M (dias)
 - **Depende de:** `addons/gdUnit4` (já instalado, v6.2.0) — nenhum outro plano
