@@ -96,6 +96,7 @@ assets/audio/             Sons e música
 assets/tiles/             Tiles do dual grid + TileSet de pintura
 assets/sprites/           SpriteFrames do personagem
 plans/                    Roadmap de próximas funcionalidades (um .md por plano)
+docs/README.md            Índice da documentação detalhada
 docs/github-projects.md   Board do GitHub Projects: campos, labels e fluxo
 docs/adr/                 Decisões de arquitetura (ADRs) e template
 tools/gen_player_frames.py     Gera as skins do personagem
