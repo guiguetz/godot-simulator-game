@@ -41,7 +41,9 @@ def gh_json(cmd: list[str]) -> dict:
 
 
 def graphql(query: str, *fields: str) -> dict:
-    cmd = ["gh", "api", "graphql", "-f", f"query={query}", *fields]
+    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    for field in fields:
+        cmd += ["-f", field]
     return json.loads(sh(cmd).stdout)
 
 
@@ -64,7 +66,7 @@ def resolve_board() -> tuple[str, str, str]:
     project_id = data["data"]["user"]["projectV2"]["id"]
     fields = graphql(
         'query { node(id: "%s") { ... on ProjectV2 { fields(first: 50) { nodes {'
-        '  ... on ProjectV2SingleSelectField { name options { id name } } } } } } }' % project_id)
+        '  ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }' % project_id)
     for field in fields["data"]["node"]["fields"]["nodes"]:
         if field.get("name") == STATUS_FIELD:
             for opt in field.get("options") or []:
