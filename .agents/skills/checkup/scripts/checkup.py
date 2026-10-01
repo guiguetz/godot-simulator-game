@@ -207,6 +207,34 @@ def check_adr_content() -> None:
         record("OK", "adr-conteudo", "ADRs com todas as seções obrigatórias")
 
 
+BRANCH_PATTERN = re.compile(
+    r"^(feat|fix|docs|chore|refactor|art|design|test|ci|perf|build)/\d+-[a-z0-9][a-z0-9-]*$")
+
+
+def current_branch_name() -> str:
+    env = (os.environ.get("GITHUB_HEAD_REF") or os.environ.get("BRANCH_NAME") or "").strip()
+    if env:
+        return env
+    try:
+        proc = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                              capture_output=True, text=True, timeout=10)
+        return proc.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def check_git_branch() -> None:
+    branch = current_branch_name()
+    if not branch or branch in ("main", "master", "HEAD"):
+        record("SKIP", "git-branch", "fora de uma branch de trabalho")
+        return
+    if BRANCH_PATTERN.match(branch):
+        record("OK", "git-branch", f"branch '{branch}' segue <tipo>/<N>-slug")
+    else:
+        record("FAIL", "git-branch",
+               f"branch '{branch}' fora do padrão <tipo>/<N>-slug (feat|fix|docs|chore|...)")
+
+
 # --------------------------------------------------------------- github checks
 
 LABELS_IN_REPO: set[str] = set()
@@ -557,6 +585,7 @@ def main() -> int:
     check_docs_index()
     check_adr_index()
     check_adr_content()
+    check_git_branch()
 
     template_labels = {
         "bug.yml": ["bug", "type:bug"],

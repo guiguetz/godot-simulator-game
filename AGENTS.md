@@ -29,7 +29,9 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
    - garanta que o item entrou no board (<https://github.com/users/guiguetz/projects/1>)
      e preencha `Status`, `Priority`, `Tipo`, `Area`, `Effort`
      (ids/CLI em `docs/github-projects.md`).
-   Bugs **não** viram plano — bugs vão para o Issues.
+   Bugs **não** viram plano — bugs vão direto para o Issues; **todo trabalho
+   que não é bug vira plano** (+ issue espelho), incluindo tooling e docs.
+   Correções triviais (typo/link) podem ir num PR direto, sem plano.
 
 3. **Implementação → documentação em `docs/`.**
    Toda funcionalidade ou mudança de comportamento implementada exige:
@@ -62,6 +64,18 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
      pelo workflow *Pull request linked to issue* quando o PR contém
      `Fixes #N`); o merge/fechamento leva a **Done** pelo workflow embutido.
 
+6. **Branching — nunca commitar na `main`.**
+   `main` é protegida (exige PR). Uma branch curta por issue, nome
+   `<tipo>/<N>-slug` (`tipo` ∈ `feat|fix|docs|chore|refactor|art|design`,
+   derivado das labels), 1 branch = 1 issue = 1 PR, apagada no merge. O checkup
+   valida o nome da branch (verificação `git-branch`).
+
+## Fluxos
+
+O passo a passo do dia a dia está em [`docs/workflow.md`](docs/workflow.md):
+**Fluxo A** (assumir issue: `/skill:start N` → implementar → `/skill:pr`) e
+**Fluxo B** (criar algo novo: bug → issue; não-bug → plano + issue).
+
 ## Regras de trabalho
 
 - **Idioma:** responda e escreva docs em **português (pt-BR)**. Identificadores
@@ -71,8 +85,8 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 - **Git:** commits no imperativo, com prefixo de tipo (`feat:`, `fix:`,
   `docs:`, `ci:`, `chore:`), seguindo o histórico (`git log --oneline`) e com o
   sufixo `(#N)` da issue quando houver.
-- **Um escopo por PR:** vincule o PR à issue correspondente com `Fixes #N` e
-  mova o item do board para **In Review** ao abri-lo.
+- **Um escopo por PR:** uma branch, uma issue, um PR; vincule com `Fixes #N`
+  e abra o PR com `/skill:pr` (o board vai a **In Review** sozinho).
 - **Verificação:** rode o smoke test headless antes de declarar concluído:
   ```bash
   godot --headless --path . --script tools/smoke_test.gd
@@ -88,6 +102,7 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 
 | Assunto | Onde |
 |---|---|
+| Fluxos (assumir issue, criar novo, automações) | `docs/workflow.md` |
 | Board, campos, labels, views, automações | `docs/github-projects.md` |
 | Decisões de arquitetura (ADRs) | `docs/adr/README.md` |
 | Template e índice de planos | `plans/README.md` |
@@ -96,3 +111,5 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 | CI | `.github/workflows/ci.yml` |
 | Checkup de consistência | `docs/checkup.md`, `.agents/skills/checkup/` |
 | Criar issue + board + labels | `.agents/skills/issue/` |
+| Assumir issue (board + branch) | `.agents/skills/start/` |
+| Abrir PR com `Fixes #N` | `.agents/skills/pr/` |

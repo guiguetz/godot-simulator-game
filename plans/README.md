@@ -23,6 +23,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [005](005-checkup-de-consistencia.md) | Checkup de consistência (skill + automação) | Concluído | Média | P |
 | [006](006-refinos-agents-e-automacoes.md) | Refinos do AGENTS.md e automações de gestão | Concluído | Média | M |
 | [007](007-guarda-corpo-fase-2.md) | Guarda-corpo fase 2: pre-commit, ADR e board no CI | Concluído | Média | M |
+| [008](008-fluxos-e-skills-de-trabalho.md) | Fluxos de trabalho, skills start/pr e branching | Concluído | Média | M |
 
 ## Estrutura de um plano
 
