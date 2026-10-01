@@ -134,11 +134,17 @@ func _create_tilemap_dual(terrain_name: String, config: Dictionary) -> TileMapLa
 
 func _rebuild_world() -> void:
 	_clear_ground()
-	_dual_grid.setup(MAP_W, MAP_H, TILE)
-	_build_ground()
-	_dual_grid.add_terrain(WATER, load(TEX_WATER), 1)
-	_dual_grid.add_terrain(DIRT, load(TEX_DIRT), 2)
-	_dual_grid.add_terrain(SOIL, load(TEX_SOIL), 3)
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: configure each terrain layer
+		_build_ground()
+		# TileMapDual handles rendering automatically
+	else:
+		# Legacy mode: use DualGrid
+		_dual_grid.setup(MAP_W, MAP_H, TILE)
+		_build_ground()
+		_dual_grid.add_terrain(WATER, load(TEX_WATER), 1)
+		_dual_grid.add_terrain(DIRT, load(TEX_DIRT), 2)
+		_dual_grid.add_terrain(SOIL, load(TEX_SOIL), 3)
 	_refresh_from_paint()
 
 
@@ -169,9 +175,14 @@ func _paint_signature() -> int:
 
 
 func _refresh_from_paint() -> void:
-	var masks := _terrain_masks()
-	_dual_grid.refresh_all(masks)
-	_build_walkable(masks)
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: update walkable based on terrain
+		_build_walkable_from_tilemapdual()
+	else:
+		# Legacy mode: use masks
+		var masks := _terrain_masks()
+		_dual_grid.refresh_all(masks)
+		_build_walkable(masks)
 	_last_paint_signature = _paint_signature()
 
 
@@ -213,6 +224,17 @@ func _build_walkable(masks: Dictionary) -> void:
 		for i in range(m.size()):
 			if m[i] != 0:
 				_walkable[i] = 0
+
+
+func _build_walkable_from_tilemapdual() -> void:
+	_walkable.resize(MAP_W * MAP_H)
+	_walkable.fill(1)
+	for y in range(MAP_H):
+		for x in range(MAP_W):
+			var cell := Vector2i(x, y)
+			var tid := terrain_at(cell)
+			if tid != NONE and not _is_walkable_terrain(tid):
+				_walkable[y * MAP_W + x] = 0
 
 
 ## Le a custom data `key` do material `tid` na TileSet. Sem fonte/tile/data
@@ -293,15 +315,43 @@ func _build_ground() -> void:
 func terrain_at(cell: Vector2i) -> int:
 	if cell.x < 0 or cell.y < 0 or cell.x >= MAP_W or cell.y >= MAP_H:
 		return -1
-	var src := _terrain.get_cell_source_id(cell)
-	return int(SRC_TO_TERRAIN.get(src, NONE))
+	
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: check each terrain layer
+		if _terrain_water.get_cell_source_id(cell) != -1:
+			return WATER
+		if _terrain_dirt.get_cell_source_id(cell) != -1:
+			return DIRT
+		if _terrain_soil.get_cell_source_id(cell) != -1:
+			return SOIL
+		return NONE
+	else:
+		# Legacy mode: use source IDs
+		var src := _terrain.get_cell_source_id(cell)
+		return int(SRC_TO_TERRAIN.get(src, NONE))
 
 
 func set_terrain(cell: Vector2i, tid: int, refresh: bool = true) -> void:
-	if tid == NONE:
-		_terrain.erase_cell(cell)
-	elif TERRAIN_TO_SRC.has(tid):
-		_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: write to the appropriate terrain layer
+		# First, clear all terrain at this cell
+		_terrain_water.erase_cell(cell)
+		_terrain_dirt.erase_cell(cell)
+		_terrain_soil.erase_cell(cell)
+		# Then set the new terrain
+		match tid:
+			WATER:
+				_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
+			DIRT:
+				_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
+			SOIL:
+				_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+	else:
+		# Legacy mode: use source IDs
+		if tid == NONE:
+			_terrain.erase_cell(cell)
+		elif TERRAIN_TO_SRC.has(tid):
+			_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
 	if refresh:
 		_refresh_from_paint()
 
