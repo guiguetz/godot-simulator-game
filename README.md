@@ -97,6 +97,7 @@ assets/tiles/             Tiles do dual grid + TileSet de pintura
 assets/sprites/           SpriteFrames do personagem
 plans/                    Roadmap de próximas funcionalidades (um .md por plano)
 docs/github-projects.md   Board do GitHub Projects: campos, labels e fluxo
+docs/adr/                 Decisões de arquitetura (ADRs) e template
 tools/gen_player_frames.py     Gera as skins do personagem
 tools/generate_placeholders.py Gera os PNGs placeholder
 tools/smoke_test.gd            Smoke test headless

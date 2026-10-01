@@ -62,6 +62,7 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 | Assunto | Onde |
 |---|---|
 | Board, campos, labels, views, automações | `docs/github-projects.md` |
+| Decisões de arquitetura (ADRs) | `docs/adr/README.md` |
 | Template e índice de planos | `plans/README.md` |
 | Visão geral do jogo, controles, scripts | `README.md` |
 | Templates de issue | `.github/ISSUE_TEMPLATE/` |
