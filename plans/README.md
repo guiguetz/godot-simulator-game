@@ -28,6 +28,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [010](010-limboai-rotinas-npcs.md) | Rotinas de NPCs com LimboAI | Proposto | Alta | G |
 | [011](011-hitbox-hurtbox-combate.md) | Sistema de combate com Hitbox/Hurtbox | Proposto | Média | M |
 | [012](012-mochila-expansível.md) | Mochila expansível com progressão | Proposto | Média | M |
+| [013](013-shaders-animações.md) | Shaders e animações visuais | Proposto | Alta | G |
 
 ## Estrutura de um plano
 
