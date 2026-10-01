@@ -1,0 +1,26 @@
+[gd_resource type="TileSet" format=3 uid="uid://djukua4iyuul5"]
+
+[ext_resource type="Texture2D" uid="uid://bslt61jb3xfrx" path="res://assets/tiles/terrain_water.png" id="1_7u5s7"]
+[ext_resource type="Texture2D" uid="uid://b1w806ob2jeig" path="res://assets/tiles/terrain_dirt.png" id="2_m2jfx"]
+[ext_resource type="Texture2D" uid="uid://b0nfamxds860w" path="res://assets/tiles/terrain_soil.png" id="3_t4xjg"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fsixq"]
+texture = ExtResource("1_7u5s7")
+3:3/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oxrb5"]
+texture = ExtResource("2_m2jfx")
+3:3/0 = 0
+3:3/0/custom_data_0 = true
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ekibe"]
+texture = ExtResource("3_t4xjg")
+3:3/0 = 0
+3:3/0/custom_data_0 = true
+
+[resource]
+custom_data_layer_0/name = "walkable"
+custom_data_layer_0/type = 1
+sources/0 = SubResource("TileSetAtlasSource_fsixq")
+sources/1 = SubResource("TileSetAtlasSource_oxrb5")
+sources/2 = SubResource("TileSetAtlasSource_ekibe")

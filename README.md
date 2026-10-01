@@ -1,0 +1,131 @@
+# Simulator Game
+
+Jogo 2D top-down de fazenda no estilo Stardew Valley (Godot 4.6+). O terreno
+usa **dual grid** (folha 4x4 = 16 tiles) e o personagem anda em 8 direções com
+modo andar/correr. Inclui **ferramentas, plantações, máquinas, casa,
+inventário/hotbar, loja, ciclo dia/noite, chuva e save/load**.
+
+## Controles
+
+| Ação | Tecla / Gamepad |
+|---|---|
+| Mover | `WASD` / setas / d-pad / analógico |
+| Correr / andar | `Shift` / botão B |
+| Usar ferramenta (ação) | `Espaço` / botão A |
+| Selecionar hotbar | `1`..`9` / roda do mouse |
+| Ferramenta anterior/próxima | `Q`/`E` / L1/R1 |
+| Trocar semente | `C` / botão X |
+| Modo decoração | `B` |
+| Pausar | `Esc` / Start |
+
+### Ferramentas (hotbar)
+
+1. **Enxada** — cava grama/terra em canteiro (solo) e **colhe** cultura pronta.
+2. **Regador** — molha o canteiro (necessário para a planta crescer).
+3. **Machado** — derruba árvore (madeira); 2º golpe remove o toco.
+4. **Espada** — golpe (efeito sonoro).
+5. **Vara** — abre um **minigame de pesca** de frente para a água (peixes
+   dourado, cinza e prateado).
+6. **Semente** — planta a semente selecionada num canteiro vazio.
+7. **Aspersor** — rega as plantações ao redor a cada novo dia (custa madeira).
+8. **Espantalho** — decorativo.
+9. **Pescador** — pesca sozinho se estiver perto da água (custa madeira).
+
+### Menu de pausa (`Esc`)
+
+**Loja** (compra sementes com moedas e vende itens), **Salvar**, **Carregar**,
+**Opções > Jogabilidade** (modo padrão andar/correr) e **Opções > Aparência**
+(escolhe a skin do personagem). Salvo em `user://settings.cfg`. O save do mundo
+fica em `user://savegame.json`.
+
+## Sistemas
+
+- **Mundo dual grid** (`scripts/dual_grid.gd`, `scripts/world.gd`): água,
+  trilha e canteiro pintados numa camada lógica; o dual grid e a andabilidade
+  são reconstruídos ao vivo (também no editor, via `@tool`).
+- **Entidades** (`scripts/prop.gd`, `scripts/crop.gd`, `scripts/machine.gd`)
+  com **Y-sorting** (`Game/Entities`), plantas em 4 estágios, máquinas animadas.
+- **Casa com colisão** (`scripts/house_builder.gd`): bloco 3x3 de paredes +
+  telhado, com polígono de física por tile.
+- **Ferramentas** (`scripts/player.gd` + `world.gd:use_tool`).
+- **Pesca** (`scripts/fishing.gd`): minigame de barra (segurar `Espaço` para
+  subir, gastar resistência e manter o peixe na zona) que concede um peixe.
+- **Decoração** (`scripts/decor.gd`): modo `B` com paleta de móveis; clique
+  esquerdo coloca, direito remove; persiste no save.
+- **Criaturas/NPCs** (`scripts/critter.gd`): gato (segue o player), rato
+  (foge), moradora e slime (vagam).
+- **Inventário/HUD** (`scripts/inventory.gd`, `scripts/hud.gd`).
+- **Loja** (`scripts/shop.gd`).
+- **Tempo e clima** (`scripts/time_manager.gd`, `scripts/weather.gd`,
+  `scripts/day_night.gd`, `scripts/rain.gd`).
+- **Áudio** (`scripts/audio_manager.gd`): passos, ferramentas, música e chuva.
+- **Save/Load** (`scripts/save_game.gd`): inventário, tempo, clima, terreno,
+  props, plantações, máquinas e decorações.
+
+## Estrutura
+
+```
+scenes/game.tscn          Cena principal
+scenes/player.tscn        Player (CharacterBody2D + AnimatedSprite2D + Camera2D)
+scripts/world.gd          Monta o mundo, entidades e expõe use_tool/save
+scripts/dual_grid.gd      Renderizador dual grid + overlay de editor
+scripts/player.gd         Movimento, animação e uso de ferramentas
+scripts/crop.gd           Plantação (4 estágios + crescimento)
+scripts/prop.gd           Árvore/toco
+scripts/machine.gd        Aspersor / espantalho / pescador
+scripts/fishing.gd        Minigame de pesca (UI + lógica)
+scripts/decor.gd          Modo decoração (paleta + colocar/remover)
+scripts/critter.gd        Criaturas/NPCs ambientais
+scripts/house_builder.gd  Casa 3x3 com colisão
+scripts/inventory.gd      Inventário, sementes, moedas, hotbar (autoload)
+scripts/hud.gd            HUD (hotbar, itens, relógio)
+scripts/shop.gd           Loja
+scripts/time_manager.gd   Relógio/dia (autoload)
+scripts/weather.gd        Clima (autoload)
+scripts/rain.gd           Overlay de chuva
+scripts/day_night.gd      Tint de dia/noite
+scripts/audio_manager.gd  SFX/música/chuva (autoload)
+scripts/save_game.gd      Persistência (autoload)
+scripts/pause_menu.gd     Menu de pausa
+scripts/settings.gd       Modo andar/correr
+scripts/data/enums.gd     Enums (class_name Enums)
+scripts/data/game_data.gd Dados/itens/preços/ícones (autoload GameData)
+scripts/terrain_layer.gd  Camada de pintura do terreno
+assets/graphics/          Arte do jogo (personagens, tilesets, ícones, plantas...)
+assets/audio/             Sons e música
+assets/tiles/             Tiles do dual grid + TileSet de pintura
+assets/sprites/           SpriteFrames do personagem
+issues/                   Registro de bugs (um .md por issue)
+plans/                    Roadmap de próximas funcionalidades (um .md por plano)
+tools/gen_player_frames.py     Gera as skins do personagem
+tools/generate_placeholders.py Gera os PNGs placeholder
+tools/smoke_test.gd            Smoke test headless
+```
+
+## Personagem (skins)
+
+`assets/sprites/player_<skin>_frames.tres` (basic, blue, cowboy, grey, red,
+straw) — geradas por `tools/gen_player_frames.py` a partir do sheet base de
+48x48, incluindo `idle`/`walk` + as ferramentas
+`hoe/water/axe/sword/fish/seed`. Troque de skin no jogo em
+**Esc > Opções > Aparência** (a escolha fica em `user://settings.cfg`).
+
+## Rodar / testar
+
+```bash
+# Rodar o jogo (Godot 4.7 neste ambiente)
+/home/guilherme/godot/Godot_v4.7.2-stable_linux.x86_64 --path .
+
+# Regenerar as skins do personagem
+python3 tools/gen_player_frames.py
+
+# Smoke test headless (ferramentas, plantio, colheita, máquinas, save/load)
+/home/guilherme/godot/Godot_v4.7.2-stable_linux.x86_64 --headless --path . \
+  --script tools/smoke_test.gd
+```
+
+## Configuração
+
+- Resolução interna: 640x360 (janela 1280x720), filtro nearest (pixel art).
+- Fonte: `PixeloidSans` (`[gui] theme/custom_font`).
+- Ações de input no `Project Settings > Input Map`.
