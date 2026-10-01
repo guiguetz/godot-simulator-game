@@ -71,7 +71,11 @@ issues, board, labels e docs — [`docs/checkup.md`](docs/checkup.md).
 bash tools/setup_hooks.sh                                          # hooks de git
 python3 tools/gen_player_frames.py                                 # skins
 godot --headless --path . --script tools/smoke_test.gd             # smoke test
+godot --headless --path . -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a tests --ignoreHeadlessMode -c  # gdUnit4
+godot --headless --path . --import                                 # regenerar cache de classes
 ```
+
+Detalhes das convenções e mapa de cobertura em [`tests/README.md`](tests/README.md).
 
 ## Configuração
 

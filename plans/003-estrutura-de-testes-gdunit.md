@@ -246,22 +246,22 @@ que a suíte equivalente passar, o smoke test pode ser simplificado ou removido
 
 ## Tarefas
 
-- [ ] Adicionar `[gdunit4] test_lookup_folder="tests"` ao `project.godot`.
-- [ ] Criar `tests/README.md` (como rodar, convenções, mapa de cobertura).
-- [ ] Criar `tests/helpers/sim_test_suite.gd` e validar reset/semeadura.
-- [ ] Implementar `unit/data/` (Enums, GameData).
-- [ ] Implementar `unit/` de autoloads (Inventory, TimeManager, Weather,
+- [x] Adicionar `[gdunit4] test_lookup_folder="tests"` ao `project.godot`.
+- [x] Criar `tests/README.md` (como rodar, convenções, mapa de cobertura).
+- [x] Criar `tests/helpers/sim_test_suite.gd` e validar reset/semeadura.
+- [x] Implementar `unit/data/` (Enums, GameData).
+- [x] Implementar `unit/` de autoloads (Inventory, TimeManager, Weather,
       Settings).
-- [ ] Implementar `unit/` de entidades (Crop, Prop, Machine, Critter).
-- [ ] Implementar `unit/` de render/estruturas (DualGrid, HouseBuilder).
-- [ ] Implementar `world/` (terreno, ferramentas, máquinas, decoração, dia,
+- [x] Implementar `unit/` de entidades (Crop, Prop, Machine, Critter).
+- [x] Implementar `unit/` de render/estruturas (DualGrid, HouseBuilder).
+- [x] Implementar `world/` (terreno, ferramentas, máquinas, decoração, dia,
       serialização, player).
-- [ ] Implementar `ui/` (Fishing, Decor, HUD, Shop, PauseMenu, Rain, DayNight,
+- [x] Implementar `ui/` (Fishing, Decor, HUD, Shop, PauseMenu, Rain, DayNight,
       AudioManager).
-- [ ] Criar `tests/helpers/world_fixture.gd` e implementar `integration/`.
-- [ ] Implementar `regression/` (issues 001–004).
-- [ ] Rodar a suíte inteira e corrigir flakiness/órfãos.
-- [ ] Atualizar `README.md` (comandos de teste) e `plans/README.md`.
+- [x] Implementar `integration/` (boot, fazenda, máquinas, pesca, save, pausa+loja).
+- [x] Implementar `regression/` (issues 001–004).
+- [x] Rodar a suíte inteira e corrigir flakiness/órfãos.
+- [x] Atualizar `README.md` (comandos de teste) e `plans/README.md`.
 - [ ] (Opcional) Aposentar/simplificar `tools/smoke_test.gd`.
 
 ## Critérios de aceite

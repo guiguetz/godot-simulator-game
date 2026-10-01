@@ -1,6 +1,10 @@
 # Godot 4+ specific ignores
 .godot/
 
+# gdUnit4 reports
+reports/
+user://gdunit_reports/
+
 # Godot-specific ignores
 .import/
 export.cfg
