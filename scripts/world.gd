@@ -599,8 +599,18 @@ func _on_new_day(_day: int) -> void:
 
 func to_dict() -> Dictionary:
 	var terrain: Array = []
-	for cell in _terrain.get_used_cells():
-		terrain.append([cell.x, cell.y, int(SRC_TO_TERRAIN.get(_terrain.get_cell_source_id(cell), -1))])
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: read from each terrain layer
+		for cell in _terrain_water.get_used_cells():
+			terrain.append([cell.x, cell.y, WATER])
+		for cell in _terrain_dirt.get_used_cells():
+			terrain.append([cell.x, cell.y, DIRT])
+		for cell in _terrain_soil.get_used_cells():
+			terrain.append([cell.x, cell.y, SOIL])
+	else:
+		# Legacy mode: read from paint layer
+		for cell in _terrain.get_used_cells():
+			terrain.append([cell.x, cell.y, int(SRC_TO_TERRAIN.get(_terrain.get_cell_source_id(cell), -1))])
 	var props: Array = []
 	for node in _props.values():
 		props.append(node.to_dict())
@@ -637,12 +647,30 @@ func _decor_kind(cell: Vector2i) -> int:
 func from_dict(data: Dictionary) -> void:
 	_clear_entities()
 	_clear_decor()
-	_terrain.clear()
-	for t in data.get("terrain", []):
-		var cell := Vector2i(int(t[0]), int(t[1]))
-		var tid := int(t[2])
-		if TERRAIN_TO_SRC.has(tid):
-			_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
+	
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: clear and restore each terrain layer
+		_terrain_water.clear()
+		_terrain_dirt.clear()
+		_terrain_soil.clear()
+		for t in data.get("terrain", []):
+			var cell := Vector2i(int(t[0]), int(t[1]))
+			var tid := int(t[2])
+			match tid:
+				WATER:
+					_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
+				DIRT:
+					_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
+				SOIL:
+					_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+	else:
+		# Legacy mode: use paint layer
+		_terrain.clear()
+		for t in data.get("terrain", []):
+			var cell := Vector2i(int(t[0]), int(t[1]))
+			var tid := int(t[2])
+			if TERRAIN_TO_SRC.has(tid):
+				_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
 	_refresh_from_paint()
 
 	for p in data.get("props", []):
