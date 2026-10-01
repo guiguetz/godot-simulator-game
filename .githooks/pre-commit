@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Checkup de consistência (offline) antes do commit.
+# Instale com: bash tools/setup_hooks.sh  (git config core.hooksPath .githooks)
+# Bloqueia apenas em FAIL; WARN/SKIP não impedem o commit.
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-commit: python3 não encontrado — checkup ignorado." >&2
+  exit 0
+fi
+
+if ! python3 .agents/skills/checkup/scripts/checkup.py --offline; then
+  echo "" >&2
+  echo "pre-commit: FAIL no checkup — corrija na fonte." >&2
+  echo "  (consciente: 'git commit --no-verify' ignora o hook)" >&2
+  exit 1
+fi

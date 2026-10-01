@@ -16,6 +16,13 @@ jobs:
 
       - name: Checkup
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          python3 .agents/skills/checkup/scripts/checkup.py --no-board --no-smoke
+          if [ -n "${{ secrets.PROJECTS_TOKEN }}" ]; then
+            echo "PROJECTS_TOKEN presente — checagens de board habilitadas"
+            args=""
+          else
+            echo "PROJECTS_TOKEN ausente — checagens de board puladas (--no-board)"
+            args="--no-board"
+          fi
+          python3 .agents/skills/checkup/scripts/checkup.py $args --no-smoke

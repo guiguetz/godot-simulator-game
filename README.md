@@ -103,6 +103,8 @@ tools/gen_player_frames.py     Gera as skins do personagem
 tools/generate_placeholders.py Gera os PNGs placeholder
 tools/smoke_test.gd            Smoke test headless
 .agents/skills/                Skills do pi (checkup, issue) e scripts de gestão
+.githooks/pre-commit           Checkup offline antes do commit
+tools/setup_hooks.sh           Instala os hooks locais (core.hooksPath)
 docs/checkup.md                Checkup de consistência do repositório
 ```
 
@@ -134,6 +136,9 @@ Bugs, features e roadmap são gerenciados no **GitHub Projects**:
 ```bash
 # Rodar o jogo (Godot 4.6.3 neste ambiente; ver docs/adr/001-versao-do-godot.md)
 /home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --path .
+
+# Instalar os hooks de git (checkup de consistência no pre-commit)
+bash tools/setup_hooks.sh
 
 # Regenerar as skins do personagem
 python3 tools/gen_player_frames.py

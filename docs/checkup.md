@@ -25,6 +25,7 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Pro
 | `template-de-planos` | Planos têm Objetivo, Status, Prioridade, Esforço, Critérios de aceite |
 | `docs-↔-índice` | Todo doc em `docs/` está no índice e os links do índice não estão mortos |
 | `adr-↔-índice` | Todo ADR está no índice de `docs/adr/README.md`, e vice-versa |
+| `adr-conteudo` | ADRs têm as seções obrigatórias (Status, Data, Contexto, Decisão, Consequências, Alternativas) |
 | `labels-do-repo` / `labels-de-template` | Labels usadas nos templates existem no repo |
 | `labels-documentadas` | Toda label convencional do repo está em `docs/github-projects.md` |
 | `labels-catalogadas` | Toda label catalogada na doc existe no repo |
@@ -58,8 +59,28 @@ houver FAIL, o que permite usar o script em CI ou em hooks.
 - **Fim de sessão de gestão** (issues/board/planos): `--no-smoke`.
 - **Cada edição de código:** não é necessário rodar.
 
+## Pre-commit hook
+
+Instale uma vez por clone:
+
+```bash
+bash tools/setup_hooks.sh   # git config core.hooksPath .githooks
+```
+
+O hook [`.githooks/pre-commit`](../.githooks/pre-commit) roda o checkup em
+modo `--offline` antes de cada commit e bloqueia **apenas em `FAIL`**
+(WARN/SKIP não impedem). Sem `python3` no ambiente, o hook fica inerte.
+Para ignorar conscientemente: `git commit --no-verify`.
+
 ## No CI
 
 O workflow [`checkup.yml`](../.github/workflows/checkup.yml) roda o checkup a
 cada push/PR na `main`, **sem** o filtro de `docs/**` (ao contrário do
-`ci.yml`), e usa `--no-board` porque o token do CI não tem escopo de Projects.
+`ci.yml`).
+
+- **Sem** o secret `PROJECTS_TOKEN`, roda com `--no-board` (o `GITHUB_TOKEN`
+  não acessa Projects v2 de usuário).
+- **Com** o secret `PROJECTS_TOKEN` (PAT clássico com escopo `project` + `repo`),
+  roda também as checagens de board, views e workflows. Para habilitar: crie o
+  PAT e adicione como **Settings → Secrets and variables → Actions → New
+  repository secret** (`PROJECTS_TOKEN`).

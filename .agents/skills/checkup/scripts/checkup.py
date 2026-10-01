@@ -192,6 +192,21 @@ def check_adr_index() -> None:
         record("OK", "adr-↔-índice", f"{len(files)} ADRs indexados e consistentes")
 
 
+def check_adr_content() -> None:
+    required = ["- **Status:**", "- **Data:**", "## Contexto", "## Decisão",
+                "## Consequências", "## Alternativas descartadas"]
+    bad = []
+    for p in sorted((ROOT / "docs/adr").glob("[0-9][0-9][0-9]-*.md")):
+        text = p.read_text(encoding="utf-8")
+        missing = [s for s in required if s not in text]
+        if missing:
+            bad.append(f"{p.name}: faltam {missing}")
+    if bad:
+        record("FAIL", "adr-conteudo", "; ".join(bad))
+    else:
+        record("OK", "adr-conteudo", "ADRs com todas as seções obrigatórias")
+
+
 # --------------------------------------------------------------- github checks
 
 LABELS_IN_REPO: set[str] = set()
@@ -512,6 +527,7 @@ def main() -> int:
     check_plan_template()
     check_docs_index()
     check_adr_index()
+    check_adr_content()
 
     template_labels = {
         "bug.yml": ["bug", "type:bug"],
@@ -551,7 +567,8 @@ def main() -> int:
 def check_labels_offline(template_labels: dict[str, list[str]]) -> None:
     labels_doc = set(re.findall(r"`((?:type|area|priority|effort):[\w-]+)`",
                                 (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")))
-    missing = [l for ls in template_labels.values() for l in ls if l not in labels_doc]
+    missing = [l for ls in template_labels.values() for l in ls
+               if re.match(r"^(type|area|priority|effort):", l) and l not in labels_doc]
     if missing:
         record("WARN", "labels-documentadas (offline)", f"usadas em templates mas não no doc: {missing}")
     else:

@@ -33,6 +33,8 @@ Disciplina manual não pegou nenhum desses casos; um script pegou todos.
 - **FAIL é corrigido na fonte.** É proibido afrouxar o checkup para mascarar
   uma inconsistência; se a regra mudou, muda-se primeiro o `AGENTS.md` e depois
   o checkup, no mesmo commit.
+- O checkup também roda no **pre-commit** (modo `--offline`) e valida o
+  **conteúdo** dos ADRs (seções obrigatórias), não só o índice.
 - **Docs são fonte de verdade verificável:** tabelas e índices (labels, campos
   e workflows do board, índice de `docs/`, de `plans/` e de ADRs) são
   comparados com a realidade pelo checkup, em vez de virarem snapshots que
@@ -46,9 +48,8 @@ Disciplina manual não pegou nenhum desses casos; um script pegou todos.
 - **Negativas / custos:** cada nova tabela/índice exige um parser correspondente
   no checkup; o smoke test deixa o checkup completo lento (por isso
   `--no-smoke` em sessões de gestão).
-- **Em aberto:** verificação que precise de escopo de Projects no CI (hoje
-  `--no-board`); validar as **views** do board; rodar o checkup em pre-commit
-  hook; cobertura de ADRs individuais (hoje só o índice).
+- **Em aberto:** checagens de **board no CI** dependem de um token com escopo
+  de Projects (`PROJECTS_TOKEN`); hook de **pre-push**; automação via GitHub App.
 
 ## Alternativas descartadas
 

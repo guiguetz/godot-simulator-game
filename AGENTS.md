@@ -52,6 +52,9 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
      `--no-smoke`;
    - não é preciso rodar a cada edição de código.
 
+   O hook de pre-commit roda o modo `--offline` sozinho (instale com
+   `bash tools/setup_hooks.sh`); ele bloqueia só em `FAIL`.
+
 5. **Rastreabilidade issue ↔ PR ↔ commit.**
    - o PR referencia a issue correspondente com `Fixes #N` no corpo;
    - a mensagem de commit traz o sufixo `(#N)`;
