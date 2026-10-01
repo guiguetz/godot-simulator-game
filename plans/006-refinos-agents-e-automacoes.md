@@ -45,8 +45,9 @@ issues já com labels e campos do board preenchidos.
 ## Escopo
 - **Incluído:** os 5 itens acima + docs no mesmo commit.
 - **Fora do escopo:** automação server-side (GitHub Actions) para mover o board
-  em PR aberto — o workflow embutido "Pull request linked to issue" segue
-  inativo; avaliar depois.
+  em PR aberto. Decisão: o workflow embutido **Pull request linked to issue**
+  foi ativado (PR com `Fixes #N` → `Status = In Review`), coberto pela
+  verificação `board-workflows` do checkup.
 
 ## Tarefas
 - [x] Remover "Estado atual do board" de `docs/github-projects.md`

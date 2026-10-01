@@ -269,6 +269,42 @@ def check_board_fields_documented() -> None:
         record("OK", "board-campos-documentados", "opções dos campos do board batem com docs/github-projects.md")
 
 
+def check_board_workflows() -> None:
+    doc = (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")
+    expected: dict[str, bool] = {}
+    for line in doc.splitlines():
+        m = re.match(r"^\|\s*([^|]+?)\s*\|\s*(✅|⬜)", line)
+        if m:
+            expected[m.group(1).strip()] = m.group(2) == "✅"
+    if not expected:
+        record("WARN", "board-workflows", "tabela de automações não encontrada em docs/github-projects.md")
+        return
+    view = parse_gh_json(
+        run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
+            "board-workflows"), "board-workflows")
+    if view is None:
+        return
+    query = ('query { node(id: "%s") { ... on ProjectV2 { workflows(first: 20) '
+             '{ nodes { name enabled } } } } }' % view["id"])
+    data = parse_gh_json(run(["gh", "api", "graphql", "-f", f"query={query}"],
+                             "board-workflows"), "board-workflows")
+    if data is None:
+        return
+    actual = {w["name"]: w["enabled"] for w in data["data"]["node"]["workflows"]["nodes"]}
+    problems = []
+    for name, exp in sorted(expected.items()):
+        if name not in actual:
+            problems.append(f"'{name}' documentado mas inexistente no board")
+        elif actual[name] != exp:
+            state = lambda on: "ativo" if on else "inativo"
+            problems.append(f"'{name}': doc={state(exp)} real={state(actual[name])}")
+    problems += [f"'{n}' no board mas não documentado" for n in sorted(actual) if n not in expected]
+    if problems:
+        record("FAIL", "board-workflows", "; ".join(problems))
+    else:
+        record("OK", "board-workflows", f"{len(expected)} workflows batem com docs/github-projects.md")
+
+
 def find_godot() -> str | None:
     env = os.environ.get("GODOT")
     if env and Path(env).is_file():
@@ -346,6 +382,7 @@ def main() -> int:
         else:
             check_board(issues)
             check_board_fields_documented()
+            check_board_workflows()
         if args.no_smoke:
             record("SKIP", "smoke-test", "--no-smoke")
         else:

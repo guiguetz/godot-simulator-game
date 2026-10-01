@@ -114,7 +114,9 @@ Regras do projeto:
 ## Automações
 
 Os *workflows* embutidos são configurados uma vez em
-**Project → ⋯ → Settings → Workflows** (a API não os expõe). Estado atual:
+**Project → ⋯ → Settings → Workflows**. A API **lê** o estado via GraphQL
+(`ProjectV2.workflows`) e **deleta** (`deleteProjectV2Workflow`), mas
+**não ativa/configura** — isso é só no UI. Estado atual:
 
 | Workflow | Estado | Efeito |
 |---|---|---|
@@ -124,7 +126,7 @@ Os *workflows* embutidos são configurados uma vez em
 | Pull request merged | ✅ ativo | PR mesclado → `Status = Done` |
 | Auto-close issue | ⬜ inativo | — |
 | Item added to project | ⬜ inativo | — |
-| Pull request linked to issue | ⬜ inativo | — |
+| Pull request linked to issue | ✅ ativo | PR vinculado à issue (`Fixes #N`) → `Status = In Review` |
 
 ## Adicionar/editar itens pela CLI
 

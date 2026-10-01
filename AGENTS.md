@@ -55,8 +55,9 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 5. **Rastreabilidade issue ↔ PR ↔ commit.**
    - o PR referencia a issue correspondente com `Fixes #N` no corpo;
    - a mensagem de commit traz o sufixo `(#N)`;
-   - ao abrir o PR, mova o item do board para **In Review**; o merge/fechamento
-     leva a **Done** pelo workflow embutido.
+   - ao abrir o PR, mova o item do board para **In Review** (automatizado
+     pelo workflow *Pull request linked to issue* quando o PR contém
+     `Fixes #N`); o merge/fechamento leva a **Done** pelo workflow embutido.
 
 ## Regras de trabalho
 
