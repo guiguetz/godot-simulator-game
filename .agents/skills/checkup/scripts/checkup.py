@@ -160,6 +160,32 @@ def check_docs_index() -> None:
         record("OK", "docs-↔-índice", f"{len(files)} docs indexados e links válidos")
 
 
+def check_adr_index() -> None:
+    adr_dir = ROOT / "docs/adr"
+    index_path = adr_dir / "README.md"
+    if not index_path.is_file():
+        record("FAIL", "adr-↔-índice", "docs/adr/README.md não encontrado")
+        return
+    text = index_path.read_text(encoding="utf-8")
+    index_ids = {m.group(1): m.group(2)
+                 for m in re.finditer(r"\[(\d{3})\]\((\d{3}-[^)]+\.md)\)", text)}
+    files = {m.group(1): p.name
+             for p in adr_dir.glob("[0-9][0-9][0-9]-*.md")
+             if (m := re.match(r"(\d{3})-", p.name))}
+    problems = []
+    if set(index_ids) - set(files):
+        problems.append(f"no índice mas sem arquivo: {sorted(set(index_ids) - set(files))}")
+    if set(files) - set(index_ids):
+        problems.append(f"arquivo sem linha no índice: {sorted(set(files) - set(index_ids))}")
+    mismatched = sorted(i for i, f in index_ids.items() if i in files and files[i] != f)
+    if mismatched:
+        problems.append(f"link do índice aponta p/ nome errado: {mismatched}")
+    if problems:
+        record("FAIL", "adr-↔-índice", "; ".join(problems))
+    else:
+        record("OK", "adr-↔-índice", f"{len(files)} ADRs indexados e consistentes")
+
+
 # --------------------------------------------------------------- github checks
 
 LABELS_IN_REPO: set[str] = set()
@@ -392,6 +418,7 @@ def main() -> int:
     check_plans_index()
     check_plan_template()
     check_docs_index()
+    check_adr_index()
 
     template_labels = {
         "bug.yml": ["bug", "type:bug"],

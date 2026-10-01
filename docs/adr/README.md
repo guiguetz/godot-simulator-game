@@ -56,3 +56,4 @@ O que foi decidido, no imperativo ("Usamos X", "Documentação vive em Y").
 | [004](004-politica-de-testes.md) | Política de testes | Aceita |
 | [005](005-versionamento-de-save.md) | Versionamento do save | Aceita |
 | [006](006-addons-de-dev.md) | Addons de dev (gdUnit4, godot_ai) | Aceita |
+| [007](007-checkup-como-guarda-corpo.md) | Checkup de consistência como guarda-corpo | Aceita |
