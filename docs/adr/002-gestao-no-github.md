@@ -1,6 +1,6 @@
 # ADR 002 — Gestão no GitHub Issues + Projects
 
-- **Status:** Proposta
+- **Status:** Aceita
 - **Data:** 2026-10-01
 - **Contexto:** [`docs/github-projects.md`](../github-projects.md), [`plans/README.md`](../../plans/README.md), commit `e226974` (removido `issues/`)
 

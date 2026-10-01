@@ -1,6 +1,6 @@
 # Simulator Game
 
-Jogo 2D top-down de fazenda no estilo Stardew Valley (Godot 4.6+). O terreno
+Jogo 2D top-down de fazenda no estilo Stardew Valley (Godot 4.6.3). O terreno
 usa **dual grid** (folha 4x4 = 16 tiles) e o personagem anda em 8 direções com
 modo andar/correr. Inclui **ferramentas, plantações, máquinas, casa,
 inventário/hotbar, loja, ciclo dia/noite, chuva e save/load**.
@@ -119,7 +119,7 @@ Bugs, features e roadmap são gerenciados no **GitHub Projects**:
 [`docs/github-projects.md`](docs/github-projects.md).
 
 - **Issues de bug** usem o template 🐛 Bug (severidade, sintoma, reprodução,
-  causa e verificação) — o mesmo formato dos arquivos de `issues/`.
+  causa e verificação).
 - **Issues de plano** usem o template 🗺️ Plano e linkam o arquivo de `plans/`.
 - **CI** (`.github/workflows/ci.yml`): roda o smoke test headless e, quando
   existir `tests/`, a suíte gdUnit4, a cada push/PR na `main`.
@@ -127,14 +127,14 @@ Bugs, features e roadmap são gerenciados no **GitHub Projects**:
 ## Rodar / testar
 
 ```bash
-# Rodar o jogo (Godot 4.7 neste ambiente)
-/home/guilherme/godot/Godot_v4.7.2-stable_linux.x86_64 --path .
+# Rodar o jogo (Godot 4.6.3 neste ambiente; ver docs/adr/001-versao-do-godot.md)
+/home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --path .
 
 # Regenerar as skins do personagem
 python3 tools/gen_player_frames.py
 
 # Smoke test headless (ferramentas, plantio, colheita, máquinas, save/load)
-/home/guilherme/godot/Godot_v4.7.2-stable_linux.x86_64 --headless --path . \
+/home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --headless --path . \
   --script tools/smoke_test.gd
 ```
 

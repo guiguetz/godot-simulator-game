@@ -1,6 +1,6 @@
 # ADR 004 — Política de testes
 
-- **Status:** Proposta
+- **Status:** Aceita
 - **Data:** 2026-10-01
 - **Contexto:** [`plans/003-estrutura-de-testes-gdunit.md`](../../plans/003-estrutura-de-testes-gdunit.md), [`tools/smoke_test.gd`](../../tools/smoke_test.gd), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 

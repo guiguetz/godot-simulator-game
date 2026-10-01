@@ -1,12 +1,12 @@
 name: 🐛 Bug
-description: Defeito ou regressão no jogo (espelha a convenção de `issues/`)
+description: Defeito ou regressão no jogo
 labels: ["bug", "type:bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Registre o bug no mesmo formato dos arquivos de `issues/` do repositório.
         Ao corrigir, documente no corpo a causa e a verificação antes de fechar.
+        Convenções de labels e fluxo: docs/github-projects.md.
 
   - type: dropdown
     id: severity

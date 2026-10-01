@@ -1,6 +1,6 @@
 # ADR 005 — Versionamento do save
 
-- **Status:** Proposta
+- **Status:** Aceita
 - **Data:** 2026-10-01
 - **Contexto:** [`scripts/save_game.gd`](../../scripts/save_game.gd)
 

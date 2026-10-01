@@ -121,7 +121,7 @@ tests/
     test_fishing_flow.gd
     test_save_load_flow.gd
     test_pause_shop_flow.gd
-  regression/                    # bugs registrados em issues/
+  regression/                    # bugs corrigidos (verificados no GitHub Issues)
     test_issue_001_z_order.gd
     test_issue_002_player_visivel.gd
     test_issue_003_movimento_horizontal.gd

@@ -65,8 +65,8 @@ Backlog → Ready → In Progress → In Review → Done
 
 Regras do projeto:
 
-- Um **bug** vai para `issues/` do GitHub (corpo com Sintoma, Causa,
-  Reprodução e Verificação) e recebe `type:bug`.
+- Um **bug** vai para o **GitHub Issues** (template 🐛 Bug: severidade,
+  sintoma, reprodução, causa e verificação) e recebe `bug` + `type:bug`.
 - Uma **funcionalidade futura** vira um plano em `plans/NNN-*.md` **e** uma
   issue `[Plano NNN] ...` que linka o arquivo. O plano é a fonte de detalhe.
 - Ao concluir, a issue é fechada; o aprendizado relevante sobe para o

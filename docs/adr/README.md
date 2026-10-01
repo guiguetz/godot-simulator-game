@@ -50,8 +50,9 @@ O que foi decidido, no imperativo ("Usamos X", "Documentação vive em Y").
 
 | ADR | Título | Status |
 |---|---|---|
-| [001](001-versao-do-godot.md) | Versão canônica do Godot | Proposta |
-| [002](002-gestao-no-github.md) | Gestão no GitHub Issues + Projects | Proposta |
-| [003](003-onde-vive-a-documentacao.md) | Onde vive cada documentação | Proposta |
-| [004](004-politica-de-testes.md) | Política de testes | Proposta |
-| [005](005-versionamento-de-save.md) | Versionamento do save | Proposta |
+| [001](001-versao-do-godot.md) | Versão canônica do Godot | Aceita |
+| [002](002-gestao-no-github.md) | Gestão no GitHub Issues + Projects | Aceita |
+| [003](003-onde-vive-a-documentacao.md) | Onde vive cada documentação | Aceita |
+| [004](004-politica-de-testes.md) | Política de testes | Aceita |
+| [005](005-versionamento-de-save.md) | Versionamento do save | Aceita |
+| [006](006-addons-de-dev.md) | Addons de dev (gdUnit4, godot_ai) | Aceita |

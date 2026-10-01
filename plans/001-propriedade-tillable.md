@@ -3,7 +3,8 @@
 - **Status:** Proposto
 - **Prioridade:** Média
 - **Esforço:** P (horas)
-- **Depende de:** — (relaciona-se a `../issues/004-caixa-andabilidade-maior-que-tile.md`)
+- **Depende de:** — (relaciona-se ao bug da caixa de andabilidade,
+  https://github.com/guiguetz/godot-simulator-game/issues/4)
 - **Arquivos-alvo:**
   - `assets/tiles/terrain_paint.tres` (nova camada de custom data)
   - `scripts/world.gd` (`_is_tillable_terrain`, `is_tillable_cell`, `use_tool`)
