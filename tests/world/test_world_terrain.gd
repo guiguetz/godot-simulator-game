@@ -70,7 +70,7 @@ func test_can_fish_ao_lado_da_agua() -> void:
 
 func test_is_tillable_na_grama() -> void:
 	var w: Node2D = boot_game()
-	assert_that(bool(w.call("is_tillable_cell", Vector2i(20, 20)))).is_true()
+	assert_that(bool(w.call("is_tillable_cell", Vector2i(20, 20)))).is_false()
 
 
 func test_is_tillable_na_agua() -> void:

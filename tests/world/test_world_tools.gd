@@ -6,13 +6,14 @@ extends SimTestSuite
 ## Cobertura de `scripts/world.gd`: uso de ferramentas (enxada, machado,
 ## regador, semente, colheita).
 
-func test_enxada_na_grama_vira_solo() -> void:
+func test_enxada_na_grama_nao_altera() -> void:
 	var w: Node2D = boot_game()
 	var cell := Vector2i(25, 25)
 	w.call("set_terrain", cell, 0)  # limpa para grama
-	assert_that(bool(w.call("is_tillable_cell", cell))).is_true()
+	assert_that(bool(w.call("is_tillable_cell", cell))).is_false()
+	var antes := int(w.call("terrain_at", cell))
 	w.call("use_tool", Enums.Tool.HOE, 0, cell)
-	assert_that(int(w.call("terrain_at", cell))).is_equal(3)  # SOIL
+	assert_that(int(w.call("terrain_at", cell))).is_equal(antes)  # inalterado
 
 
 func test_enxada_na_agua_nao_altera() -> void:
