@@ -36,12 +36,14 @@ var _sprite: AnimatedSprite2D
 var _target := Vector2.ZERO
 var _timer := 0.0
 var _facing := "down"
+var _world: Node = null
 
 
-func setup(critter_kind: int, pos: Vector2) -> void:
+func setup(critter_kind: int, pos: Vector2, world_ref: Node = null) -> void:
 	kind = critter_kind
 	home = pos
 	global_position = pos
+	_world = world_ref
 	match kind:
 		Kind.CAT:
 			speed = 62.0
@@ -64,10 +66,23 @@ func setup(critter_kind: int, pos: Vector2) -> void:
 	_play("idle_" + _facing)
 
 
+func _is_walkable(pos: Vector2) -> bool:
+	if _world == null or not _world.has_method("is_walkable"):
+		return true
+	return _world.is_walkable(pos)
+
+
 func _pick_target() -> void:
-	var angle := randf() * TAU
-	var radius := randf_range(8.0, wander_radius)
-	_target = home + Vector2(cos(angle), sin(angle)) * radius
+	for _attempt in range(8):
+		var angle := randf() * TAU
+		var radius := randf_range(8.0, wander_radius)
+		var candidate := home + Vector2(cos(angle), sin(angle)) * radius
+		if _is_walkable(candidate):
+			_target = candidate
+			_timer = randf_range(1.0, 2.6)
+			return
+	# fallback: fica parado em casa
+	_target = home
 	_timer = randf_range(1.0, 2.6)
 
 
@@ -88,9 +103,15 @@ func _process(delta: float) -> void:
 	_timer -= delta
 	var to_target := _target - global_position
 	if to_target.length() > 3.0:
-		global_position += to_target.normalized() * speed * delta
-		_facing = _face(to_target)
-		moving = true
+		var step := to_target.normalized() * speed * delta
+		var next_pos := global_position + step
+		if _is_walkable(next_pos):
+			global_position = next_pos
+			_facing = _face(to_target)
+			moving = true
+		else:
+			# caminho bloqueado — escolhe novo alvo
+			_pick_target()
 	elif _timer <= 0.0:
 		_pick_target()
 

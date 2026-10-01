@@ -288,7 +288,7 @@ func _clear_entities() -> void:
 
 func _spawn_critter(kind: int, cell: Vector2i) -> Critter:
 	var c := Critter.new()
-	c.setup(kind, _cell_anchor(cell))
+	c.setup(kind, _cell_anchor(cell), self)
 	_entities.add_child(c)
 	return c
 
