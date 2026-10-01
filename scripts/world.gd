@@ -93,6 +93,7 @@ func _paint_signature() -> int:
 
 
 func _refresh_from_paint() -> void:
+	_sync_tilemapdual_from_paint()
 	_build_walkable_from_tilemapdual()
 	_last_paint_signature = _paint_signature()
 
@@ -105,6 +106,24 @@ func _clear_ground() -> void:
 
 
 # --- Walkable ---------------------------------------------------------------
+
+func _sync_tilemapdual_from_paint() -> void:
+	# Clear all terrain layers
+	_terrain_water.clear()
+	_terrain_dirt.clear()
+	_terrain_soil.clear()
+	
+	# Read from paint layer and write to TileMapDual layers
+	for cell in _terrain_paint.get_used_cells():
+		var src := _terrain_paint.get_cell_source_id(cell)
+		match src:
+			0: # WATER
+				_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
+			1: # DIRT
+				_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
+			2: # SOIL
+				_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+
 
 func _build_walkable_from_tilemapdual() -> void:
 	_walkable.resize(MAP_W * MAP_H)
