@@ -1,16 +1,16 @@
 @tool
 extends Node2D
 
-## Mundo: chao + dual grid (agua, trilha, canteiro) + entidades (props,
+## Mundo: chao + terreno (agua, trilha, canteiro) + entidades (props,
 ## plantacoes, maquinas) + casa. Expoe `use_tool()` para o Player e
 ## `to_dict()/from_dict()` para o SaveGame.
 ##
-## O terreno logico e PINTADO na camada Game/DualGrid/Terrain (fonte 0 = agua,
-## 1 = terra, 2 = canteiro). Em modo editor (@tool) tudo e reconstruido ao
-## vivo enquanto voce pinta.
-##
-## NOTA: Em transicao para TileMapDual. O sistema antigo (DualGrid) ainda
-## funciona, mas os novos nodes TileMapDual estao disponiveis para migracao.
+## O terreno logico e gerenciado por dois modos:
+## - Legacy: PINTADO na camada Game/DualGrid/Terrain (fonte 0 = agua,
+##   1 = terra, 2 = canteiro). Em modo editor (@tool) tudo e reconstruido ao
+##   vivo enquanto voce pinta.
+## - TileMapDual: Cada terreno e um node TileMapDual separado (TerrainWater,
+##   TerrainDirt, TerrainSoil). Use `use_tilemap_dual = true` para ativar.
 
 const TILE := 16
 const MAP_W := 40
