@@ -213,6 +213,20 @@ LABELS_IN_REPO: set[str] = set()
 LABELS_OK = False
 _PROJECT_ID: str | None = None
 _PROJECT_ID_ATTEMPTED = False
+_OWNER_ARG: str | None = None
+
+
+def project_owner() -> str:
+    """Owner para os comandos `gh project`.
+
+    O `gh` precisa do escopo `read:org` para resolver o dono pelo login; sem
+    ele, usamos `@me` quando o login autenticado é o próprio dono do board.
+    """
+    global _OWNER_ARG
+    if _OWNER_ARG is None:
+        login = (run(["gh", "api", "user", "-q", ".login"], "board-login") or "").strip()
+        _OWNER_ARG = "@me" if login == OWNER else OWNER
+    return _OWNER_ARG
 
 TRANSIENT_HINTS = (
     "rate limit", "secondary rate", "could not resolve host", "connection refused",
@@ -232,7 +246,7 @@ def project_id() -> str | None:
     if _PROJECT_ID is None and not _PROJECT_ID_ATTEMPTED:
         _PROJECT_ID_ATTEMPTED = True
         view = parse_gh_json(
-            run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
+            run(["gh", "project", "view", str(PROJECT), "--owner", project_owner(), "--format", "json"],
                 "board-projeto"), "board-projeto")
         if view is None:
             return None
@@ -326,7 +340,7 @@ def check_board(issues: list[dict] | None) -> None:
     if issues is None:
         record("SKIP", "board-↔-issues", "issues indisponíveis")
         return
-    out = run(["gh", "project", "item-list", str(PROJECT), "--owner", OWNER,
+    out = run(["gh", "project", "item-list", str(PROJECT), "--owner", project_owner(),
                "--limit", "500", "--format", "json"], "board-itens")
     data = parse_gh_json(out, "board-itens")
     if data is None:
@@ -363,7 +377,7 @@ def check_board(issues: list[dict] | None) -> None:
 
 
 def check_board_fields_documented() -> None:
-    out = run(["gh", "project", "field-list", str(PROJECT), "--owner", OWNER,
+    out = run(["gh", "project", "field-list", str(PROJECT), "--owner", project_owner(),
                "--format", "json"], "board-campos")
     data = parse_gh_json(out, "board-campos")
     if data is None:

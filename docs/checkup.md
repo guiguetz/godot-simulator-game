@@ -80,7 +80,12 @@ cada push/PR na `main`, **sem** o filtro de `docs/**` (ao contrário do
 
 - **Sem** o secret `PROJECTS_TOKEN`, roda com `--no-board` (o `GITHUB_TOKEN`
   não acessa Projects v2 de usuário).
-- **Com** o secret `PROJECTS_TOKEN` (PAT clássico com escopo `project` + `repo`),
-  roda também as checagens de board, views e workflows. Para habilitar: crie o
-  PAT e adicione como **Settings → Secrets and variables → Actions → New
-  repository secret** (`PROJECTS_TOKEN`).
+- **Com** o secret `PROJECTS_TOKEN` (PAT clássico com escopos `project` e
+  `public_repo`), roda também as checagens de board, views e workflows. Para
+  habilitar: crie o PAT e adicione como **Settings → Secrets and variables →
+  Actions → New repository secret** (`PROJECTS_TOKEN`).
+
+> O `gh` exige o escopo `read:org` para resolver o dono do board pelo login.
+> Sem ele, o checkup resolve a identidade autenticada (`gh api user`) e usa
+> `--owner @me` quando o login é o próprio dono — por isso `project +
+> public_repo` bastam.
