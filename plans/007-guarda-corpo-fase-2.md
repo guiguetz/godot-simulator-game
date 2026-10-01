@@ -1,6 +1,6 @@
 # 007 — Guarda-corpo fase 2: pre-commit, conteúdo de ADR e board no CI
 
-- **Status:** Em andamento
+- **Status:** Concluído
 - **Prioridade:** Média
 - **Esforço:** M (dias)
 - **Depende de:** [005](005-checkup-de-consistencia.md), [006](006-refinos-agents-e-automacoes.md), [ADR 007](../docs/adr/007-checkup-como-guarda-corpo.md)
@@ -48,14 +48,15 @@ um ADR sem `Decisão`/`Consequências` passa. E o CI roda `--no-board` porque o
 - [x] Corrigir WARN espúrio do modo `--offline`
 - [x] Hook `.githooks/pre-commit` + `tools/setup_hooks.sh` + doc
 - [x] CI: `--board` condicionado ao secret `PROJECTS_TOKEN` + doc
-- [ ] Criar o secret `PROJECTS_TOKEN` no repositório (ação do dono) e confirmar CI com board
+- [x] CI: `--board` condicionado ao secret `PROJECTS_TOKEN` + doc
+- [x] Secret `PROJECTS_TOKEN` criado no repositório e CI com board confirmado
 
 ## Critérios de aceite
 - [x] Checkup completo sem FAIL; `--offline` sem WARN
 - [x] Hook bloqueia commit com inconsistência (testado) e libera commit limpo
 - [x] ADR sem seção obrigatória é detectado
 - [x] CI verde **sem** `PROJECTS_TOKEN` (fallback `--no-board`)
-- [ ] CI verde **com** `PROJECTS_TOKEN` (checagens de board habilitadas)
+- [x] CI verde **com** `PROJECTS_TOKEN` (checagens de board via GraphQL)
 
 ## Riscos / Notas
 - O hook não se instala sozinho em clones novos — daí o `setup_hooks.sh` e a
