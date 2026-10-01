@@ -47,3 +47,12 @@ um invariante e não deve ser aumentado sem revisar o teste de andabilidade.
 - `facing_cell()` converte a posição global para a célula de `TILE_SIZE` px à
   frente; é a célula usada por `world.use_tool()` e pelo posicionamento de
   máquinas.
+
+## Skins
+
+`assets/sprites/player_<skin>_frames.tres` — `basic`, `blue`, `cowboy`,
+`grey`, `red`, `straw` — geradas por `tools/gen_player_frames.py` a partir do
+sheet base de 48×48, com `idle`/`walk` + animações de ferramentas
+(`hoe`/`water`/`axe`/`sword`/`fish`/`seed`). A skin ativa fica em
+`GameSettings.skin` (seção `gameplay` de `user://settings.cfg`); troque em
+jogo com **Esc > Opções > Aparência** (`player.apply_skin`).

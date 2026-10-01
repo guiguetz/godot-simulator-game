@@ -1,6 +1,6 @@
 # 004 — Dividir README em docs/ por sistema
 
-- **Status:** Proposto
+- **Status:** Em andamento
 - **Prioridade:** Baixa
 - **Esforço:** P (horas)
 - **Depende de:** [ADR 003](../docs/adr/003-onde-vive-a-documentacao.md)
@@ -36,15 +36,15 @@ O README concentra controles, sistemas, mapa de scripts e gestão — já passou
   gameplay.
 
 ## Tarefas
-- [ ] Criar `docs/<sistema>.md` para cada item da lista "Sistemas" do README
-- [ ] Encurtar a seção "Sistemas" do README para lista + links
-- [ ] Verificar links internos (docs ↔ README ↔ AGENTS.md)
-- [ ] Validar geração do wiki (workflow Sync wiki)
+- [x] Criar `docs/<sistema>.md` para cada item da lista "Sistemas" do README
+- [x] Encurtar a seção "Sistemas" do README para lista + links
+- [x] Verificar links internos (docs ↔ README ↔ AGENTS.md)
+- [x] Validar geração do wiki (workflow Sync wiki)
 
 ## Critérios de aceite
-- [ ] README ≤ ~80 linhas, sem perder informação (tudo disponível via links)
-- [ ] Cada sistema do jogo tem uma página em `docs/`
-- [ ] Wiki reflete as páginas após o sync
+- [x] README ≤ ~80 linhas, sem perder informação (tudo disponível via links)
+- [x] Cada sistema do jogo tem uma página em `docs/`
+- [x] Wiki reflete as páginas após o sync
 
 ## Riscos / Notas
 - Risco de conteúdo duplicado entre README e docs → README mantém só resumo +
