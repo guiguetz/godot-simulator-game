@@ -26,6 +26,7 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Pro
 | `docs-↔-índice` | Todo doc em `docs/` está no índice e os links do índice não estão mortos |
 | `adr-↔-índice` | Todo ADR está no índice de `docs/adr/README.md`, e vice-versa |
 | `adr-conteudo` | ADRs têm as seções obrigatórias (Status, Data, Contexto, Decisão, Consequências, Alternativas) |
+| `git-branch` | Quando em branch de trabalho, o nome segue `<tipo>/<N>-slug` |
 | `labels-do-repo` / `labels-de-template` | Labels usadas nos templates existem no repo |
 | `labels-documentadas` | Toda label convencional do repo está em `docs/github-projects.md` |
 | `labels-catalogadas` | Toda label catalogada na doc existe no repo |

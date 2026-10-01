@@ -102,10 +102,11 @@ docs/adr/                 Decisões de arquitetura (ADRs) e template
 tools/gen_player_frames.py     Gera as skins do personagem
 tools/generate_placeholders.py Gera os PNGs placeholder
 tools/smoke_test.gd            Smoke test headless
-.agents/skills/                Skills do pi (checkup, issue) e scripts de gestão
+.agents/skills/                Skills do pi (checkup, issue, start, pr) e scripts de gestão
 .githooks/pre-commit           Checkup offline antes do commit
 tools/setup_hooks.sh           Instala os hooks locais (core.hooksPath)
 docs/checkup.md                Checkup de consistência do repositório
+docs/workflow.md               Fluxos de trabalho (assumir issue, criar novo)
 ```
 
 ## Personagem (skins)
