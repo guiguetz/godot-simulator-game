@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    name: Smoke test headless
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: /opt/godot
+          key: godot-${{ vars.GODOT_VERSION || '4.7.2' }}-linux
+
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          VERSION="${{ vars.GODOT_VERSION || '4.7.2' }}"
+          mkdir -p /opt/godot
+          curl -L -o /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip"
+          unzip -o /tmp/godot.zip -d /tmp/godot
+          mv /tmp/godot/Godot_v${VERSION}-stable_linux.x86_64 /opt/godot/godot
+          chmod +x /opt/godot/godot
+
+      - name: Import assets
+        run: /opt/godot/godot --headless --path . --import 2>&1 | tail -5
+
+      - name: Smoke test (ferramentas, plantio, colheita, máquinas, save/load)
+        run: |
+          /opt/godot/godot --headless --path . \
+            --script tools/smoke_test.gd 2>&1 | tee /tmp/smoke.log
+          test "$(grep -c 'FAIL' /tmp/smoke.log)" -eq 0
+
+      - name: gdUnit4 tests
+        if: hashFiles('tests/**/*.gd') != ''
+        run: |
+          /opt/godot/godot --headless --path . \
+            -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a tests --ignoreHeadlessMode

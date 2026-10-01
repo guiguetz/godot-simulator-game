@@ -117,6 +117,12 @@ Bugs, features e roadmap são gerenciados no **GitHub Projects**:
 `Tipo`, `Area`, `Effort`), convenção de labels e fluxo de trabalho estão em
 [`docs/github-projects.md`](docs/github-projects.md).
 
+- **Issues de bug** usem o template 🐛 Bug (severidade, sintoma, reprodução,
+  causa e verificação) — o mesmo formato dos arquivos de `issues/`.
+- **Issues de plano** usem o template 🗺️ Plano e linkam o arquivo de `plans/`.
+- **CI** (`.github/workflows/ci.yml`): roda o smoke test headless e, quando
+  existir `tests/`, a suíte gdUnit4, a cada push/PR na `main`.
+
 ## Rodar / testar
 
 ```bash

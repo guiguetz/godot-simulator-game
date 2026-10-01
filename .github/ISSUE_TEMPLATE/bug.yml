@@ -1,0 +1,82 @@
+name: 🐛 Bug
+description: Defeito ou regressão no jogo (espelha a convenção de `issues/`)
+labels: ["bug", "type:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Registre o bug no mesmo formato dos arquivos de `issues/` do repositório.
+        Ao corrigir, documente no corpo a causa e a verificação antes de fechar.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidade
+      description: Impacto no jogador
+      options:
+        - Alta (bloqueia progresso / crash)
+        - Média (funcionalidade prejudicada)
+        - Baixa/Média (ajuste de feel / cosmético)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - Aberto (não investigado)
+        - Aberto (melhoria / risco)
+        - Em investigação
+        - Corrigido (manter registro)
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Sintoma
+      description: O que é observado, do ponto de vista do jogador.
+      placeholder: |
+        Ex.: o personagem trava em cantos de água ao andar na diagonal.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reprodução
+      description: Passos determinísticos para reproduzir.
+      placeholder: |
+        1. Rodar `scenes/game.tscn`
+        2. Andar na diagonal em direção à água
+        3. Observar o player travar antes da borda do tile
+    validations:
+      required: true
+
+  - type: textarea
+    id: cause
+    attributes:
+      label: Causa (se conhecida)
+      description: Arquivo/função responsável, com trecho de código se aplicável.
+      placeholder: |
+        `scripts/player.gd::_area_walkable()` usa caixa de colisão expandida
+        (`collision_padding = 4.0`) maior que um tile (16 px).
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Correção sugerida (não aplicada)
+      description: Como consertar, sem alterar comportamento sem validação.
+      placeholder: |
+        - Reduzir `collision_padding` para 1.5–2.0
+        - Limitar meia-largura a 8 px
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verificação
+      description: Como confirmar que foi corrigido (smoke test, teste gdUnit4, headless).
+      placeholder: |
+        - `tools/smoke_test.gd`: PASS
+        - Novo teste de regressão em `tests/regression/`

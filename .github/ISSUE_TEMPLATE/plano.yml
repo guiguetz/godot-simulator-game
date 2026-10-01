@@ -1,0 +1,82 @@
+name: 🗺️ Plano (funcionalidade futura)
+description: Espelha um plano de `plans/NNN-*.md` como issue no GitHub Projects
+labels: ["enhancement", "type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Crie primeiro o arquivo `plans/NNN-titulo.md` seguindo o template de
+        [`plans/README.md`](https://github.com/guiguetz/godot-simulator-game/blob/main/plans/README.md),
+        depois abra esta issue linkando o plano. A issue deve ser um resumo —
+        os detalhes ficam no arquivo.
+
+  - type: input
+    id: plan-file
+    attributes:
+      label: Plano
+      description: Caminho do arquivo do plano
+      placeholder: plans/004-nova-funcionalidade.md
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade
+      options:
+        - Alta
+        - Média
+        - Baixa
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Esforço
+      options:
+        - P (horas)
+        - M (dias)
+        - G (semana+)
+    validations:
+      required: true
+
+  - type: input
+    id: depends
+    attributes:
+      label: Depende de
+      placeholder: — ou links para planos/issues
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: Uma frase com o resultado observável para o jogador/dev.
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Arquivos-alvo
+      description: Caminhos que devem ser tocados.
+      placeholder: |
+        - scripts/world.gd
+        - assets/tiles/terrain_paint.tres
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tarefas
+      description: Itens verificáveis (checkboxes).
+      placeholder: |
+        - [ ] item 1
+        - [ ] item 2
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      description: Condições objetivas e testáveis.
+      placeholder: |
+        - [ ] condição 1
