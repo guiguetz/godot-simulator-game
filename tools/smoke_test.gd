@@ -54,7 +54,7 @@ func _tests() -> void:
 	inv.call("add_coins", 999)
 	save.call("load_game")
 	_check("save/load moedas", inv.coins == coins)
-	_check("save/load terreno", g.call("terrain_at", cell) == 3)
+	_check("save/load terreno", g.call("terrain_at", dirt_cell) == 3)
 
 	# --- Pescaria ---------------------------------------------------------
 	var fish_before: int = inv.call("count", Enums.Item.FISH)
