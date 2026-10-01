@@ -72,15 +72,20 @@ Regras do projeto:
 - Ao concluir, a issue é fechada; o aprendizado relevante sobe para o
   `README.md` ou para o próprio plano (marcado como **Concluído**).
 
-## Automações (ativar na UI)
+## Automações
 
-A API não expõe os *workflows* embutidos. Ative uma vez em
-**Project → ⋯ → Settings → Workflows**:
+Os *workflows* embutidos são configurados uma vez em
+**Project → ⋯ → Settings → Workflows** (a API não os expõe). Estado atual:
 
-1. **Item closed** → definir `Status = Done`.
-2. **Auto-add to project** → filtro `label:bug,enhancement` no repositório,
-   para novas issues entrarem no board automaticamente.
-3. **Pull request merged** → `Status = Done` (quando houver PRs).
+| Workflow | Estado | Efeito |
+|---|---|---|
+| Item closed | ✅ ativo | fecha a issue → `Status = Done` |
+| Auto-add to project | ✅ ativo | novas issues do repositório entram no board |
+| Auto-add sub-issues to project | ✅ ativo | sub-issues herdam o board |
+| Pull request merged | ✅ ativo | PR mesclado → `Status = Done` |
+| Auto-close issue | ⬜ inativo | — |
+| Item added to project | ⬜ inativo | — |
+| Pull request linked to issue | ⬜ inativo | — |
 
 ## Adicionar/editar itens pela CLI
 
