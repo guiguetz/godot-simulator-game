@@ -33,6 +33,22 @@ func test_set_terrain_roundtrip() -> void:
 	assert_that(int(w.call("terrain_at", cell))).is_equal(0)
 
 
+func test_tilemapdual_tem_regra_para_cada_combinacao_de_cantos() -> void:
+	var tileset := load("res://assets/tiles/display_water.tres") as TileSet
+	var terrain_dual := TerrainDual.new(TileSetWatcher.new(tileset))
+	var rules := terrain_dual.layers[0] as TerrainLayer
+	var atlas_tiles := {}
+	for mask in range(16):
+		var neighbors: Array = [mask & 1, (mask >> 1) & 1, (mask >> 2) & 1, (mask >> 3) & 1]
+		var mapping: Dictionary = rules.apply_rule(neighbors, Vector2i(mask, 0))
+		assert_that(int(mapping.get("sid", -1))).is_equal(0)
+		var expected := Vector2i(neighbors[0] + neighbors[1] * 2, neighbors[2] + neighbors[3] * 2)
+		assert_that(mapping.get("tile", Vector2i(-1, -1))).is_equal(expected)
+		atlas_tiles[mapping.get("tile", Vector2i(-1, -1))] = true
+	assert_that(atlas_tiles.size()).is_equal(16)
+	assert_that(terrain_dual.terrains[1].tile).is_equal(Vector2i(3, 3))
+
+
 func test_is_walkable_na_agua() -> void:
 	var w: Node2D = boot_game()
 	var pos_agua := Vector2(10 * 16 + 8, 7 * 16 + 8)

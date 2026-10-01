@@ -4,51 +4,13 @@ extends SceneTree
 
 const TILE_SIZE := Vector2i(16, 16)
 
-# Standard dual grid tileset layout (4x4 grid = 16 positions, 15 used)
-# Reference: https://github.com/user-images.githubusercontent.com/47016402/87044518-ee28fa80-c1f6-11ea-86f5-de53e86fcbb6.png
+# Atlas dual-grid 4x4: cada tile representa uma combinação dos quadrantes
+# TL/TR (colunas) e BL/BR (linhas) da textura.
 const TILE_LAYOUT := [
-	# Row 0 (bottom)
-	Vector2i(0, 0),  # empty (background)
-	Vector2i(1, 0),  # top-right corner
-	Vector2i(2, 0),  # top-left corner
-	Vector2i(3, 0),  # top edge
-	# Row 1
-	Vector2i(0, 1),  # bottom-right corner
-	Vector2i(1, 1),  # all corners
-	Vector2i(2, 1),  # top-left + top-right corners
-	Vector2i(3, 1),  # top edge + corners
-	# Row 2
-	Vector2i(0, 2),  # bottom-left corner
-	Vector2i(1, 2),  # bottom-left + bottom-right corners
-	Vector2i(2, 2),  # all corners except bottom-left
-	Vector2i(3, 2),  # top + bottom edges
-	# Row 3
-	Vector2i(0, 3),  # bottom edge
-	Vector2i(1, 3),  # bottom edge + corners
-	Vector2i(2, 3),  # full tile (foreground)
-	Vector2i(3, 3),  # empty (unused)
-]
-
-# Peering bits for each tile position
-# Format: [bottom_right, bottom_left, top_left, top_right]
-# 0 = background, 1 = foreground
-const PEERING_BITS := [
-	[0, 0, 0, 0],  # (0,0) empty
-	[0, 0, 0, 1],  # (1,0) top-right corner
-	[0, 0, 1, 0],  # (2,0) top-left corner
-	[0, 0, 1, 1],  # (3,0) top edge
-	[0, 1, 0, 0],  # (0,1) bottom-right corner
-	[0, 1, 0, 1],  # (1,1) all corners
-	[0, 1, 1, 0],  # (2,1) top-left + top-right
-	[0, 1, 1, 1],  # (3,1) top edge + corners
-	[1, 0, 0, 0],  # (0,2) bottom-left corner
-	[1, 0, 0, 1],  # (1,2) bottom-left + bottom-right
-	[1, 0, 1, 0],  # (2,2) all except bottom-left
-	[1, 0, 1, 1],  # (3,2) top + bottom edges
-	[1, 1, 0, 0],  # (0,3) bottom edge
-	[1, 1, 0, 1],  # (1,3) bottom edge + corners
-	[1, 1, 1, 0],  # (2,3) full tile
-	[1, 1, 1, 1],  # (3,3) unused (same as full)
+	Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0),
+	Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1),
+	Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2),
+	Vector2i(0, 3), Vector2i(1, 3), Vector2i(2, 3), Vector2i(3, 3),
 ]
 
 const TERRAINS := {
@@ -84,14 +46,17 @@ func _generate_tileset(terrain_name: String, texture_path: String) -> TileSet:
 	var ts := TileSet.new()
 	ts.tile_size = TILE_SIZE
 	
-	# Add terrain set
+	# TileMapDual representa células vazias como terreno 0 e células ocupadas
+	# como terreno 1. Os bits do atlas também precisam ser sempre 0 ou 1:
+	# peering bits -1 fazem o addon descartar a regra daquele tile.
 	ts.add_terrain_set()
 	ts.set_terrain_set_mode(0, TileSet.TERRAIN_MODE_MATCH_CORNERS)
-	
-	# Add terrain (foreground)
 	ts.add_terrain(0)
-	ts.set_terrain_name(0, 0, terrain_name)
-	ts.set_terrain_color(0, 0, Color.WHITE)
+	ts.set_terrain_name(0, 0, "empty")
+	ts.set_terrain_color(0, 0, Color(0.25, 0.25, 0.25, 1.0))
+	ts.add_terrain(0)
+	ts.set_terrain_name(0, 1, terrain_name)
+	ts.set_terrain_color(0, 1, Color.WHITE)
 	
 	# Create atlas source
 	var source := TileSetAtlasSource.new()
@@ -105,18 +70,25 @@ func _generate_tileset(terrain_name: String, texture_path: String) -> TileSet:
 		var data := source.get_tile_data(tile_pos, 0)
 		data.terrain_set = 0
 		
-		# Set terrain (0 for background, 0 for foreground - we use peering bits)
-		if i == 14:  # Full tile (foreground)
+		# Os tiles vazios e cheio também são os sprites-base dos terrenos 0/1;
+		# os 14 tiles restantes são apenas regras de transição.
+		if tile_pos == Vector2i.ZERO:
 			data.terrain = 0
+		elif tile_pos == Vector2i(3, 3):
+			data.terrain = 1
 		else:
-			data.terrain = -1  # No terrain (will be determined by peering bits)
-		
-		# Set peering bits
-		var bits: Array = PEERING_BITS[i]
-		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER, bits[0])
-		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER, bits[1])
-		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER, bits[2])
-		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER, bits[3])
+			data.terrain = -1
+
+		# A textura está organizada com TL/TR nas colunas e BL/BR nas linhas.
+		# TileMapDual consulta os bits nesta ordem: BR, BL, TL, TR.
+		var bottom_right := tile_pos.y >> 1
+		var bottom_left := tile_pos.y & 1
+		var top_left := tile_pos.x & 1
+		var top_right := tile_pos.x >> 1
+		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_RIGHT_CORNER, bottom_right)
+		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_BOTTOM_LEFT_CORNER, bottom_left)
+		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_LEFT_CORNER, top_left)
+		data.set_terrain_peering_bit(TileSet.CELL_NEIGHBOR_TOP_RIGHT_CORNER, top_right)
 	
 	# Add source to tileset
 	ts.add_source(source, 0)

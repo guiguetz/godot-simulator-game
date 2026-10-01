@@ -4,10 +4,10 @@ extends TileMapLayer
 ## Camada de pintura do terreno logico (1 celula = 1 terreno).
 ##
 ## No editor ela fica visivel para voce pintar com a ferramenta de TileMap
-## (aba TileMap no rodape). Por padrao ela so aparece quando este no esta
-## selecionado: ao selecionar outro no, ela some e voce ve o dual grid real.
-## Em execucao fica visivel (com opacidade 1.0) para que as camadas de
-## renderização (TerrainWater, TerrainDirt, TerrainSoil) possam ler os tiles.
+## (aba TileMap no rodape). Por padrao so aparece quando este no esta
+## selecionado; ao selecionar outro no, voce ve o autotiling renderizado.
+## Em execucao fica invisivel: world.gd continua lendo os cells normalmente,
+## e as camadas TileMapDual exibem o terreno sem blocos logicos por cima.
 ##
 ## Pinte o tile cheio de cada fonte:
 ##     fonte 0 = agua, fonte 1 = terra, fonte 2 = canteiro
@@ -39,7 +39,7 @@ func _apply_editor_mode() -> void:
 		else:
 			visible = true
 	else:
-		# Em runtime, mantém visível para que as camadas de renderização
-		# (TerrainWater, TerrainDirt, TerrainSoil) possam ler os tiles.
-		# A opacidade volta ao normal para não atrapalhar o visual.
+		# A visibilidade não afeta get_used_cells() nem a leitura lógica.
+		# Esconda os tiles-fonte para não cobrir o autotiling em runtime.
+		visible = false
 		modulate = Color(1, 1, 1, 1.0)

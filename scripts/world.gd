@@ -110,21 +110,21 @@ func _clear_ground() -> void:
 # --- Walkable ---------------------------------------------------------------
 
 func _sync_tilemapdual_from_paint() -> void:
-	# Clear all terrain layers
+	# TerrainPaint é a fonte lógica; as camadas TileMapDual recebem terreno 1
+	# (terreno 0 representa vazio) para que o addon calcule as 16 combinações.
 	_terrain_water.clear()
 	_terrain_dirt.clear()
 	_terrain_soil.clear()
-	
-	# Read from paint layer and write to TileMapDual layers
+
 	for cell in _terrain_paint.get_used_cells():
 		var src := _terrain_paint.get_cell_source_id(cell)
 		match src:
 			0: # WATER
-				_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_water.draw_cell(cell, 1)
 			1: # DIRT
-				_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_dirt.draw_cell(cell, 1)
 			2: # SOIL
-				_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_soil.draw_cell(cell, 1)
 
 
 func _build_walkable_from_tilemapdual() -> void:
@@ -228,18 +228,12 @@ func terrain_at(cell: Vector2i) -> int:
 
 
 func set_terrain(cell: Vector2i, tid: int, refresh: bool = true) -> void:
-	# Clear all terrain at this cell
-	_terrain_water.erase_cell(cell)
-	_terrain_dirt.erase_cell(cell)
-	_terrain_soil.erase_cell(cell)
-	# Then set the new terrain
-	match tid:
-		WATER:
-			_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
-		DIRT:
-			_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
-		SOIL:
-			_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+	# Atualiza a camada lógica (também usada pelo editor e pelo save), nunca as
+	# camadas de display diretamente. Source IDs 0..2 representam WATER..SOIL.
+	if tid == NONE:
+		_terrain_paint.erase_cell(cell)
+	elif tid >= WATER and tid <= SOIL:
+		_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
 	if refresh:
 		_refresh_from_paint()
 
@@ -473,13 +467,11 @@ func _on_new_day(_day: int) -> void:
 
 func to_dict() -> Dictionary:
 	var terrain: Array = []
-	# Read from each terrain layer
-	for cell in _terrain_water.get_used_cells():
-		terrain.append([cell.x, cell.y, WATER])
-	for cell in _terrain_dirt.get_used_cells():
-		terrain.append([cell.x, cell.y, DIRT])
-	for cell in _terrain_soil.get_used_cells():
-		terrain.append([cell.x, cell.y, SOIL])
+	# Persiste a fonte lógica para não acoplar o save aos tiles derivados.
+	for cell in _terrain_paint.get_used_cells():
+		var tid := _terrain_paint.get_cell_source_id(cell) + 1
+		if tid >= WATER and tid <= SOIL:
+			terrain.append([cell.x, cell.y, tid])
 	var props: Array = []
 	for node in _props.values():
 		props.append(node.to_dict())
@@ -517,20 +509,13 @@ func from_dict(data: Dictionary) -> void:
 	_clear_entities()
 	_clear_decor()
 	
-	# Clear and restore each terrain layer
-	_terrain_water.clear()
-	_terrain_dirt.clear()
-	_terrain_soil.clear()
+	# Restaura a camada lógica; as camadas TileMapDual são reconstruídas dela.
+	_terrain_paint.clear()
 	for t in data.get("terrain", []):
 		var cell := Vector2i(int(t[0]), int(t[1]))
 		var tid := int(t[2])
-		match tid:
-			WATER:
-				_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
-			DIRT:
-				_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
-			SOIL:
-				_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+		if tid >= WATER and tid <= SOIL:
+			_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
 	_refresh_from_paint()
 
 	for p in data.get("props", []):

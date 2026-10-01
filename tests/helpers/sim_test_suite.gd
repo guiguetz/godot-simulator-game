@@ -121,4 +121,10 @@ static func _write_file(path: String, data: PackedByteArray) -> void:
 func boot_game() -> Variant:
 	var runner := scene_runner("res://scenes/game.tscn")
 	await_idle_frame()
-	return runner.scene()
+	var world: Node = runner.scene()
+	# Tests assert against the procedural demo map. Do not depend on cells saved
+	# in game.tscn by editor sessions; regenerate the fixture for every test.
+	world.call("_seed_demo")
+	world.call("_refresh_from_paint")
+	await_idle_frame()
+	return world
