@@ -43,8 +43,10 @@ const DECOR_TILES := [0, 1, 2, 3, 4, 5, 6, 7]
 ## Script do TileMapDual (carregado manualmente para funcionar em runtime)
 const TileMapDualScript = preload("res://addons/TileMapDual/tile_map_dual.gd")
 
-@onready var _dual_grid: DualGrid = $DualGrid
-@onready var _terrain: TileMapLayer = $DualGrid/Terrain
+# Legacy nodes (optional, only used when use_tilemap_dual is false)
+var _dual_grid: DualGrid
+var _terrain: TileMapLayer
+
 @onready var _entities: Node2D = $Entities
 @onready var _player: Player = $Entities/Player
 @onready var _camera: Camera2D = $Entities/Player/Camera2D
@@ -69,8 +71,13 @@ func _ready() -> void:
 	add_to_group("world")
 	if use_tilemap_dual:
 		_setup_tilemap_dual()
+	else:
+		# Legacy mode: get DualGrid nodes
+		_dual_grid = get_node_or_null("DualGrid")
+		if _dual_grid:
+			_terrain = _dual_grid.get_node_or_null("Terrain")
 	_rebuild_world()
-	if not _terrain.changed.is_connected(_on_terrain_changed):
+	if _terrain and not _terrain.changed.is_connected(_on_terrain_changed):
 		_terrain.changed.connect(_on_terrain_changed)
 	if not Engine.is_editor_hint():
 		_build_house()
@@ -82,52 +89,37 @@ func _ready() -> void:
 
 
 func _setup_tilemap_dual() -> void:
-	# Create TileMapDual nodes for each terrain
-	var water_config := {
-		"display_texture": "res://assets/tiles/display_water.tres",
-		"z_index": 1,
-	}
-	var dirt_config := {
-		"display_texture": "res://assets/tiles/display_dirt.tres",
-		"z_index": 2,
-	}
-	var soil_config := {
-		"display_texture": "res://assets/tiles/display_soil.tres",
-		"z_index": 3,
-	}
+	# Get TileMapDual nodes from scene
+	_terrain_water = get_node_or_null("TerrainWater")
+	_terrain_dirt = get_node_or_null("TerrainDirt")
+	_terrain_soil = get_node_or_null("TerrainSoil")
 	
-	_terrain_water = _create_tilemap_dual("TerrainWater", water_config)
-	_terrain_dirt = _create_tilemap_dual("TerrainDirt", dirt_config)
-	_terrain_soil = _create_tilemap_dual("TerrainSoil", soil_config)
+	if _terrain_water == null or _terrain_dirt == null or _terrain_soil == null:
+		push_error("TileMapDual nodes not found in scene!")
+		return
 	
-	add_child(_terrain_water)
-	add_child(_terrain_dirt)
-	add_child(_terrain_soil)
+	# Configure TileSets for each terrain
+	_configure_tileset(_terrain_water, "res://assets/tiles/terrain_water.png")
+	_configure_tileset(_terrain_dirt, "res://assets/tiles/terrain_dirt.png")
+	_configure_tileset(_terrain_soil, "res://assets/tiles/terrain_soil.png")
 
 
-func _create_tilemap_dual(terrain_name: String, config: Dictionary) -> TileMapLayer:
-	var tilemap: TileMapLayer = TileMapDualScript.new()
-	tilemap.name = terrain_name
-	
-	# Load display texture
-	var display_tex := load(config.display_texture) as Texture2D
-	if display_tex == null:
-		push_error("Failed to load display texture: " + config.display_texture)
-		return null
+func _configure_tileset(tilemap: TileMapLayer, texture_path: String) -> void:
+	var tex := load(texture_path) as Texture2D
+	if tex == null:
+		push_error("Failed to load texture: " + texture_path)
+		return
 	
 	# Create TileSet for display
 	var ts := TileSet.new()
 	ts.tile_size = Vector2i(TILE, TILE)
 	var source := TileSetAtlasSource.new()
-	source.texture = display_tex
+	source.texture = tex
 	source.texture_region_size = Vector2i(TILE, TILE)
 	source.create_tile(Vector2i(0, 0))
 	ts.add_source(source, 0)
 	
 	tilemap.tile_set = ts
-	tilemap.z_index = config.z_index
-	
-	return tilemap
 
 
 # --- Construcao do mundo ---------------------------------------------------
@@ -140,11 +132,12 @@ func _rebuild_world() -> void:
 		# TileMapDual handles rendering automatically
 	else:
 		# Legacy mode: use DualGrid
-		_dual_grid.setup(MAP_W, MAP_H, TILE)
-		_build_ground()
-		_dual_grid.add_terrain(WATER, load(TEX_WATER), 1)
-		_dual_grid.add_terrain(DIRT, load(TEX_DIRT), 2)
-		_dual_grid.add_terrain(SOIL, load(TEX_SOIL), 3)
+		if _dual_grid:
+			_dual_grid.setup(MAP_W, MAP_H, TILE)
+			_build_ground()
+			_dual_grid.add_terrain(WATER, load(TEX_WATER), 1)
+			_dual_grid.add_terrain(DIRT, load(TEX_DIRT), 2)
+			_dual_grid.add_terrain(SOIL, load(TEX_SOIL), 3)
 	_refresh_from_paint()
 
 
@@ -155,6 +148,8 @@ func _on_terrain_changed() -> void:
 func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint():
 		return
+	if _terrain == null:
+		return
 	var signature := _paint_signature()
 	if signature != _last_paint_signature:
 		_last_paint_signature = signature
@@ -162,6 +157,8 @@ func _process(_delta: float) -> void:
 
 
 func _paint_signature() -> int:
+	if _terrain == null:
+		return 0
 	var cells := _terrain.get_used_cells()
 	var data := PackedInt32Array()
 	data.resize(cells.size() * 3)
@@ -180,9 +177,10 @@ func _refresh_from_paint() -> void:
 		_build_walkable_from_tilemapdual()
 	else:
 		# Legacy mode: use masks
-		var masks := _terrain_masks()
-		_dual_grid.refresh_all(masks)
-		_build_walkable(masks)
+		if _dual_grid:
+			var masks := _terrain_masks()
+			_dual_grid.refresh_all(masks)
+			_build_walkable(masks)
 	_last_paint_signature = _paint_signature()
 
 
@@ -196,6 +194,8 @@ func _clear_ground() -> void:
 # --- Pintura -> mascaras ----------------------------------------------------
 
 func _terrain_masks() -> Dictionary:
+	if _terrain == null:
+		return {}
 	var by_src := {}
 	for cell in _terrain.get_used_cells():
 		if cell.x < 0 or cell.y < 0 or cell.x >= MAP_W or cell.y >= MAP_H:
