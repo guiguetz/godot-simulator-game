@@ -95,8 +95,8 @@ assets/graphics/          Arte do jogo (personagens, tilesets, ícones, plantas.
 assets/audio/             Sons e música
 assets/tiles/             Tiles do dual grid + TileSet de pintura
 assets/sprites/           SpriteFrames do personagem
-issues/                   Registro de bugs (um .md por issue)
 plans/                    Roadmap de próximas funcionalidades (um .md por plano)
+docs/github-projects.md   Board do GitHub Projects: campos, labels e fluxo
 tools/gen_player_frames.py     Gera as skins do personagem
 tools/generate_placeholders.py Gera os PNGs placeholder
 tools/smoke_test.gd            Smoke test headless
@@ -109,6 +109,13 @@ straw) — geradas por `tools/gen_player_frames.py` a partir do sheet base de
 48x48, incluindo `idle`/`walk` + as ferramentas
 `hoe/water/axe/sword/fish/seed`. Troque de skin no jogo em
 **Esc > Opções > Aparência** (a escolha fica em `user://settings.cfg`).
+
+## Gestão do projeto
+
+Bugs, features e roadmap são gerenciados no **GitHub Projects**:
+<https://github.com/users/guiguetz/projects/1>. Campos (`Status`, `Priority`,
+`Tipo`, `Area`, `Effort`), convenção de labels e fluxo de trabalho estão em
+[`docs/github-projects.md`](docs/github-projects.md).
 
 ## Rodar / testar
 

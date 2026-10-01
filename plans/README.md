@@ -8,6 +8,9 @@ não existe** — o que queremos construir, por quê e como.
 > `issues/`; decisões de arquitetura de longo prazo podem virar um `ADR` dentro
 > do próprio plano quando necessário.
 
+> Os planos são espelhados como issues no **GitHub Projects** do projeto
+> (campos, labels e fluxo em [`docs/github-projects.md`](../docs/github-projects.md)).
+
 ## Índice
 
 | ID | Título | Status | Prioridade | Esforço |
