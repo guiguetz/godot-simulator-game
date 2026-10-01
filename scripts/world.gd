@@ -8,6 +8,9 @@ extends Node2D
 ## O terreno logico e PINTADO na camada Game/DualGrid/Terrain (fonte 0 = agua,
 ## 1 = terra, 2 = canteiro). Em modo editor (@tool) tudo e reconstruido ao
 ## vivo enquanto voce pinta.
+##
+## NOTA: Em transicao para TileMapDual. O sistema antigo (DualGrid) ainda
+## funciona, mas os novos nodes TileMapDual estao disponiveis para migracao.
 
 const TILE := 16
 const MAP_W := 40
@@ -34,11 +37,22 @@ const TEX_DECORATION := preload("res://assets/graphics/tilesets/decoration.png")
 ## Folha decoration.png = 4x2 tiles de 16x16 (tufos, pedras, arbustos, flores).
 const DECOR_TILES := [0, 1, 2, 3, 4, 5, 6, 7]
 
+## Flag para usar TileMapDual em vez do sistema antigo
+@export var use_tilemap_dual: bool = false
+
+## Script do TileMapDual (carregado manualmente para funcionar em runtime)
+const TileMapDualScript = preload("res://addons/TileMapDual/tile_map_dual.gd")
+
 @onready var _dual_grid: DualGrid = $DualGrid
 @onready var _terrain: TileMapLayer = $DualGrid/Terrain
 @onready var _entities: Node2D = $Entities
 @onready var _player: Player = $Entities/Player
 @onready var _camera: Camera2D = $Entities/Player/Camera2D
+
+# TileMapDual nodes (created dynamically if use_tilemap_dual is true)
+var _terrain_water: TileMapLayer
+var _terrain_dirt: TileMapLayer
+var _terrain_soil: TileMapLayer
 
 var _walkable := PackedByteArray()
 var _last_paint_signature := 0
@@ -53,6 +67,8 @@ var _decor: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("world")
+	if use_tilemap_dual:
+		_setup_tilemap_dual()
 	_rebuild_world()
 	if not _terrain.changed.is_connected(_on_terrain_changed):
 		_terrain.changed.connect(_on_terrain_changed)
@@ -63,6 +79,55 @@ func _ready() -> void:
 		_setup_player()
 		_setup_camera()
 		TimeManager.new_day.connect(_on_new_day)
+
+
+func _setup_tilemap_dual() -> void:
+	# Create TileMapDual nodes for each terrain
+	var water_config := {
+		"display_texture": "res://assets/tiles/display_water.tres",
+		"z_index": 1,
+	}
+	var dirt_config := {
+		"display_texture": "res://assets/tiles/display_dirt.tres",
+		"z_index": 2,
+	}
+	var soil_config := {
+		"display_texture": "res://assets/tiles/display_soil.tres",
+		"z_index": 3,
+	}
+	
+	_terrain_water = _create_tilemap_dual("TerrainWater", water_config)
+	_terrain_dirt = _create_tilemap_dual("TerrainDirt", dirt_config)
+	_terrain_soil = _create_tilemap_dual("TerrainSoil", soil_config)
+	
+	add_child(_terrain_water)
+	add_child(_terrain_dirt)
+	add_child(_terrain_soil)
+
+
+func _create_tilemap_dual(terrain_name: String, config: Dictionary) -> TileMapLayer:
+	var tilemap: TileMapLayer = TileMapDualScript.new()
+	tilemap.name = terrain_name
+	
+	# Load display texture
+	var display_tex := load(config.display_texture) as Texture2D
+	if display_tex == null:
+		push_error("Failed to load display texture: " + config.display_texture)
+		return null
+	
+	# Create TileSet for display
+	var ts := TileSet.new()
+	ts.tile_size = Vector2i(TILE, TILE)
+	var source := TileSetAtlasSource.new()
+	source.texture = display_tex
+	source.texture_region_size = Vector2i(TILE, TILE)
+	source.create_tile(Vector2i(0, 0))
+	ts.add_source(source, 0)
+	
+	tilemap.tile_set = ts
+	tilemap.z_index = config.z_index
+	
+	return tilemap
 
 
 # --- Construcao do mundo ---------------------------------------------------
