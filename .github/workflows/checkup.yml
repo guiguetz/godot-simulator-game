@@ -26,6 +26,10 @@ jobs:
           echo "--- graphql: projectV2 de guiguetz ---"
           gh api graphql -f query='{ user(login:"guiguetz"){ projectV2(number:1){ id title } } }' 2>&1 | head -c 300 || true
           echo
+          echo "--- gh --version ---"
+          gh --version 2>&1 | head -1 || true
+          echo "--- gh project view --owner @me ---"
+          gh project view 1 --owner @me 2>&1 | head -3 || true
           echo "--- gh project view ---"
           gh project view 1 --owner guiguetz 2>&1 | head -5 || true
 
