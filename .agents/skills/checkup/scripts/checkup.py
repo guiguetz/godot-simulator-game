@@ -39,7 +39,11 @@ def run(cmd: list[str], check_desc: str) -> str | None:
         record("SKIP", check_desc, f"comando não encontrado: {cmd[0]}")
         return None
     if proc.returncode != 0:
-        record("FAIL", check_desc, f"comando falhou ({cmd[0]}): {proc.stderr.strip()[:300]}")
+        err = proc.stderr.strip()
+        if is_transient(err):
+            record("SKIP", check_desc, f"indisponível (falha transitória): {err[:200]}")
+        else:
+            record("FAIL", check_desc, f"comando falhou ({cmd[0]}): {err[:300]}")
         return None
     return proc.stdout
 
@@ -123,7 +127,9 @@ def check_template_labels(template_labels: dict[str, list[str]]) -> set[str]:
                 continue
             if label not in LABELS_IN_REPO:
                 bad.append(f"{name}: label '{label}' não existe no repo")
-    if bad:
+    if not LABELS_IN_REPO:
+        record("SKIP", "labels-de-template", "lista de labels indisponível")
+    elif bad:
         record("FAIL", "labels-de-template", "; ".join(bad))
     else:
         record("OK", "labels-de-template", f"{len(all_needed)} labels usadas nos templates existem no repo")
@@ -189,20 +195,52 @@ def check_adr_index() -> None:
 # --------------------------------------------------------------- github checks
 
 LABELS_IN_REPO: set[str] = set()
+LABELS_OK = False
+_PROJECT_ID: str | None = None
+_PROJECT_ID_ATTEMPTED = False
+
+TRANSIENT_HINTS = (
+    "rate limit", "secondary rate", "could not resolve host", "connection refused",
+    "connection reset", "error connecting", "could not connect", "no such host",
+    "dial tcp", "timed out", "timeout", "unknown owner type",
+    "server error", "bad gateway", "http 502", "http 503", "http 504",
+)
+
+
+def is_transient(stderr: str) -> bool:
+    s = (stderr or "").lower()
+    return any(h in s for h in TRANSIENT_HINTS)
+
+
+def project_id() -> str | None:
+    global _PROJECT_ID, _PROJECT_ID_ATTEMPTED
+    if _PROJECT_ID is None and not _PROJECT_ID_ATTEMPTED:
+        _PROJECT_ID_ATTEMPTED = True
+        view = parse_gh_json(
+            run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
+                "board-projeto"), "board-projeto")
+        if view is None:
+            return None
+        _PROJECT_ID = view["id"]
+    return _PROJECT_ID
 
 
 def check_labels(needed: set[str]) -> None:
-    global LABELS_IN_REPO
+    global LABELS_IN_REPO, LABELS_OK
     out = run(["gh", "label", "list", "--repo", REPO, "--limit", "200", "--json", "name"], "labels-do-repo")
     data = parse_gh_json(out, "labels-do-repo")
     if data is None:
         return
     LABELS_IN_REPO = {item["name"] for item in data}
+    LABELS_OK = True
     conventional = [l for l in LABELS_IN_REPO if re.match(r"^(type|area|priority|effort):", l)]
     record("OK", "labels-do-repo", f"{len(LABELS_IN_REPO)} labels ({len(conventional)} convencionais)")
 
 
 def check_labels_documented() -> None:
+    if not LABELS_OK:
+        record("SKIP", "labels-documentadas", "lista de labels indisponível")
+        return
     doc = (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")
     undocumented = sorted(
         l for l in LABELS_IN_REPO
@@ -221,7 +259,7 @@ def check_labels_documented() -> None:
         record("OK", "labels-catalogadas", "todas as labels catalogadas existem no repo")
 
 
-def check_issues() -> tuple[dict[int, dict], list[dict]]:
+def check_issues() -> tuple[dict[int, dict] | None, list[dict] | None]:
     out = run(
         ["gh", "issue", "list", "--repo", REPO, "--state", "all", "--limit", "200",
          "--json", "number,title,state,labels,body,url"],
@@ -229,7 +267,7 @@ def check_issues() -> tuple[dict[int, dict], list[dict]]:
     )
     data = parse_gh_json(out, "issues-do-repo")
     if data is None:
-        return {}, []
+        return None, None
     open_no_type = [i["number"] for i in data if i["state"] == "OPEN" and not any(
         l["name"].startswith("type:") for l in i["labels"])]
     if open_no_type:
@@ -239,7 +277,10 @@ def check_issues() -> tuple[dict[int, dict], list[dict]]:
     return {i["number"]: i for i in data}, data
 
 
-def check_plans_issues(issues_by_number: dict[int, dict], issues: list[dict]) -> None:
+def check_plans_issues(issues_by_number: dict[int, dict] | None, issues: list[dict] | None) -> None:
+    if issues is None:
+        record("SKIP", "planos-↔-issues", "issues indisponíveis")
+        return
     plan_files = {re.match(r"(\d+)-", p.name).group(1): p.name for p in (ROOT / "plans").glob("[0-9]*-*.md")}
     plan_issues: dict[str, int] = {}
     for issue in issues:
@@ -266,7 +307,10 @@ def check_plans_issues(issues_by_number: dict[int, dict], issues: list[dict]) ->
         record("OK", "planos-↔-issues", f"{len(plan_files)} planos com issues espelho consistentes")
 
 
-def check_board(issues: list[dict]) -> None:
+def check_board(issues: list[dict] | None) -> None:
+    if issues is None:
+        record("SKIP", "board-↔-issues", "issues indisponíveis")
+        return
     out = run(["gh", "project", "item-list", str(PROJECT), "--owner", OWNER,
                "--limit", "500", "--format", "json"], "board-itens")
     data = parse_gh_json(out, "board-itens")
@@ -347,13 +391,12 @@ def check_board_views() -> None:
     if not expected:
         record("WARN", "board-views", "tabela de views vazia em docs/github-projects.md")
         return
-    view = parse_gh_json(
-        run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
-            "board-views"), "board-views")
-    if view is None:
+    pid = project_id()
+    if pid is None:
+        record("SKIP", "board-views", "id do projeto indisponível")
         return
     query = ('query { node(id: "%s") { ... on ProjectV2 { views(first: 20) '
-             '{ nodes { name layout filter } } } } }' % view["id"])
+             '{ nodes { name layout filter } } } } }' % pid)
     data = parse_gh_json(run(["gh", "api", "graphql", "-f", f"query={query}"],
                              "board-views"), "board-views")
     if data is None:
@@ -386,13 +429,12 @@ def check_board_workflows() -> None:
     if not expected:
         record("WARN", "board-workflows", "tabela de automações não encontrada em docs/github-projects.md")
         return
-    view = parse_gh_json(
-        run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
-            "board-workflows"), "board-workflows")
-    if view is None:
+    pid = project_id()
+    if pid is None:
+        record("SKIP", "board-workflows", "id do projeto indisponível")
         return
     query = ('query { node(id: "%s") { ... on ProjectV2 { workflows(first: 20) '
-             '{ nodes { name enabled } } } } }' % view["id"])
+             '{ nodes { name enabled } } } } }' % pid)
     data = parse_gh_json(run(["gh", "api", "graphql", "-f", f"query={query}"],
                              "board-workflows"), "board-workflows")
     if data is None:

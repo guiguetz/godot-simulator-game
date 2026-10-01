@@ -38,8 +38,10 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Pro
 | `smoke-test` | Roda o smoke test headless do Godot |
 
 Níveis: `OK` (consistente), `WARN` (provável problema), `FAIL` (violação de
-regra — corrija), `SKIP` (não executado). O exit code é 1 se houver FAIL, o que
-permite usar o script em CI ou em hooks.
+regra — corrija), `SKIP` (não executado) — **inclusive falha transitória da API**
+(rate limit/rede): ela vira `SKIP`, não `FAIL`, e as verificações dependentes
+também são puladas, evitando cascata de falsos positivos. O exit code é 1 se
+houver FAIL, o que permite usar o script em CI ou em hooks.
 
 ## Fluxo recomendado
 
