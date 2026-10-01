@@ -13,6 +13,10 @@ const RUN_ANIM_SPEED := 1.6
 const TOOL_TIME := 0.35
 const STEP_INTERVAL := 0.34
 const FACING_NAMES := ["down", "up", "left", "right"]
+const TILE_SIZE := 16.0
+## Meia-caixa maxima do teste de andabilidade: fica logo abaixo de meio tile
+## para nao invadir o tile vizinho e travar o player em quinas (issue #4).
+const MAX_FEET_HALF := TILE_SIZE * 0.5 - 0.5
 
 @export var sprite_frames: SpriteFrames
 @export var placeholder_texture: Texture2D
@@ -20,7 +24,7 @@ const FACING_NAMES := ["down", "up", "left", "right"]
 
 var walkable_check: Callable = Callable()
 
-@export_range(0.0, 16.0, 0.5) var collision_padding: float = 4.0
+@export_range(0.0, 16.0, 0.5) var collision_padding: float = 2.0
 
 @onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
 
@@ -200,6 +204,8 @@ func _block_unwalkable(delta: float) -> void:
 func _area_walkable(center: Vector2) -> bool:
 	var feet_center := center + Vector2(0.0, -3.0)
 	var half := Vector2(5.0, 3.0) + Vector2(collision_padding, collision_padding)
+	half.x = minf(half.x, MAX_FEET_HALF)
+	half.y = minf(half.y, MAX_FEET_HALF)
 	return (
 		walkable_check.call(feet_center + Vector2(-half.x, -half.y))
 		and walkable_check.call(feet_center + Vector2(half.x, -half.y))

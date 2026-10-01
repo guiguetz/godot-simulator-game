@@ -43,6 +43,9 @@ fica em `user://savegame.json`.
 - **Mundo dual grid** (`scripts/dual_grid.gd`, `scripts/world.gd`): água,
   trilha e canteiro pintados numa camada lógica; o dual grid e a andabilidade
   são reconstruídos ao vivo (também no editor, via `@tool`).
+- **Colisão do player** (`scripts/player.gd`): caixa de pés com
+  `collision_padding` (padrão 2.0), limitada a meio tile para não travar em
+  quinas — detalhes em [`docs/player.md`](docs/player.md).
 - **Entidades** (`scripts/prop.gd`, `scripts/crop.gd`, `scripts/machine.gd`)
   com **Y-sorting** (`Game/Entities`), plantas em 4 estágios, máquinas animadas.
 - **Casa com colisão** (`scripts/house_builder.gd`): bloco 3x3 de paredes +
@@ -97,6 +100,7 @@ assets/tiles/             Tiles do dual grid + TileSet de pintura
 assets/sprites/           SpriteFrames do personagem
 plans/                    Roadmap de próximas funcionalidades (um .md por plano)
 docs/README.md            Índice da documentação detalhada
+docs/player.md            Movimento do personagem e caixa de andabilidade
 docs/github-projects.md   Board do GitHub Projects: campos, labels e fluxo
 docs/adr/                 Decisões de arquitetura (ADRs) e template
 tools/gen_player_frames.py     Gera as skins do personagem
