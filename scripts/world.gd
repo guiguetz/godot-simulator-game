@@ -118,11 +118,11 @@ func _sync_tilemapdual_from_paint() -> void:
 		var src := _terrain_paint.get_cell_source_id(cell)
 		match src:
 			0: # WATER
-				_terrain_water.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_water.draw_cell(cell, 0)
 			1: # DIRT
-				_terrain_dirt.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_dirt.draw_cell(cell, 0)
 			2: # SOIL
-				_terrain_soil.set_cell(cell, 0, Vector2i(0, 0))
+				_terrain_soil.draw_cell(cell, 0)
 
 
 func _build_walkable_from_tilemapdual() -> void:
