@@ -24,6 +24,10 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [006](006-refinos-agents-e-automacoes.md) | Refinos do AGENTS.md e automações de gestão | Concluído | Média | M |
 | [007](007-guarda-corpo-fase-2.md) | Guarda-corpo fase 2: pre-commit, ADR e board no CI | Concluído | Média | M |
 | [008](008-fluxos-e-skills-de-trabalho.md) | Fluxos de trabalho, skills start/pr e branching | Concluído | Média | M |
+| [009](009-dialogic-diálogos.md) | Sistema de diálogos com Dialogic 2 | Proposto | Alta | M |
+| [010](010-limboai-rotinas-npcs.md) | Rotinas de NPCs com LimboAI | Proposto | Alta | G |
+| [011](011-hitbox-hurtbox-combate.md) | Sistema de combate com Hitbox/Hurtbox | Proposto | Média | M |
+| [012](012-mochila-expansível.md) | Mochila expansível com progressão | Proposto | Média | M |
 
 ## Estrutura de um plano
 
