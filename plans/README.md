@@ -32,6 +32,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [014](014-tilemapdual-migração.md) | Migração para TileMapDual | Proposto | Alta | M |
 | [015](015-contorno-grid-ferramenta.md) | Contorno do grid com ferramenta selecionada | Proposto | Baixa | P |
 | [016](016-arvore-translucida-tras-jogador.md) | Árvore translúcida quando jogador está atrás | Proposto | Média | M |
+| [017](017-pintura-terreno-um-de-quatro.md) | Pintura de terreno em grupos 2×2 | Em design | Média | M |
 
 ## Estrutura de um plano
 
