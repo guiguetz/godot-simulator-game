@@ -19,32 +19,12 @@ jobs:
           git clone "https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
         shell: bash
 
-      - name: Copia docs/ para o wiki
+      - name: Gera páginas a partir de docs/
         run: |
-          # Remove .md antigos gerados (mantém .git)
-          find wiki -maxdepth 1 -name "*.md" -delete
-          # Home = docs/README.md; demais arquivos viram páginas próprias
-          for f in docs/*.md docs/adr/*.md; do
-            base="$(basename "$f")"
-            if [ "$base" = "README.md" ] && [ "$(dirname "$f")" = "docs" ]; then
-              dest="Home.md"                # docs/README.md -> Home
-            elif [ "$(dirname "$f")" = "docs/adr" ]; then
-              if [ "$base" = "README.md" ]; then
-                dest="ADR-Home.md"          # índice dos ADRs
-              else
-                dest="ADR-${base^}"         # ex.: 001-versao-do-godot.md -> ADR-001-versao-do-godot.md
-              fi
-            else
-              dest="${base^}"               # github-projects.md -> Github-projects.md
-            fi
-            {
-              echo "<!-- Gerado a partir de docs/ no commit ${GITHUB_SHA} — não editar aqui; edite em docs/ e deixe o workflow publicar. -->"
-              echo
-              cat "$f"
-            } > "wiki/$dest"
-          done
-          rm -f wiki/Home.md.bak
-          if [ ! -f wiki/Home.md ]; then echo "docs/README.md ausente" > wiki/Home.md; fi
+          python3 tools/wiki_sync.py . wiki \
+            --commit "${GITHUB_SHA}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --branch main
         shell: bash
 
       - name: Commit e push no wiki

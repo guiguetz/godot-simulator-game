@@ -108,5 +108,6 @@ gh project item-edit --id <ITEM_ID> \
 Bugs #1/#2/#3 foram corrigidos e fechados (z-order do mundo) → `Done`.
 O bug #4 (caixa de andabilidade) segue em `Backlog`.
 Os planos 001–003 estão como issues #5–#7:
-[#5](../../issues/5) `Backlog`, [#6](../../issues/6) `Backlog`,
-[#7](../../issues/7) `Ready`.
+[#5](https://github.com/guiguetz/godot-simulator-game/issues/5) `Backlog`,
+[#6](https://github.com/guiguetz/godot-simulator-game/issues/6) `Backlog`,
+[#7](https://github.com/guiguetz/godot-simulator-game/issues/7) `Ready`.
