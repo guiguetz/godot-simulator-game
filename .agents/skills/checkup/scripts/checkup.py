@@ -213,20 +213,11 @@ LABELS_IN_REPO: set[str] = set()
 LABELS_OK = False
 _PROJECT_ID: str | None = None
 _PROJECT_ID_ATTEMPTED = False
-_OWNER_ARG: str | None = None
 
 
-def project_owner() -> str:
-    """Owner para os comandos `gh project`.
-
-    O `gh` precisa do escopo `read:org` para resolver o dono pelo login; sem
-    ele, usamos `@me` quando o login autenticado é o próprio dono do board.
-    """
-    global _OWNER_ARG
-    if _OWNER_ARG is None:
-        login = (run(["gh", "api", "user", "-q", ".login"], "board-login") or "").strip()
-        _OWNER_ARG = "@me" if login == OWNER else OWNER
-    return _OWNER_ARG
+def graphql(query: str, check: str) -> dict | None:
+    out = run(["gh", "api", "graphql", "-f", f"query={query}"], check)
+    return parse_gh_json(out, check)
 
 TRANSIENT_HINTS = (
     "rate limit", "secondary rate", "could not resolve host", "connection refused",
@@ -242,15 +233,20 @@ def is_transient(stderr: str) -> bool:
 
 
 def project_id() -> str | None:
+    """id do board via GraphQL.
+
+    Não usamos `gh project`: no gh 2.101 ele exige os escopos `read:org` e
+    `read:discussion` mesmo para leitura; com escopo `project` a GraphQL basta.
+    """
     global _PROJECT_ID, _PROJECT_ID_ATTEMPTED
     if _PROJECT_ID is None and not _PROJECT_ID_ATTEMPTED:
         _PROJECT_ID_ATTEMPTED = True
-        view = parse_gh_json(
-            run(["gh", "project", "view", str(PROJECT), "--owner", project_owner(), "--format", "json"],
-                "board-projeto"), "board-projeto")
-        if view is None:
+        data = graphql('query { user(login: "%s") { projectV2(number: %d) { id } } }'
+                       % (OWNER, PROJECT), "board-projeto")
+        if data is None:
             return None
-        _PROJECT_ID = view["id"]
+        project = ((data.get("data") or {}).get("user") or {}).get("projectV2") or {}
+        _PROJECT_ID = project.get("id")
     return _PROJECT_ID
 
 
@@ -340,22 +336,35 @@ def check_board(issues: list[dict] | None) -> None:
     if issues is None:
         record("SKIP", "board-↔-issues", "issues indisponíveis")
         return
-    out = run(["gh", "project", "item-list", str(PROJECT), "--owner", project_owner(),
-               "--limit", "500", "--format", "json"], "board-itens")
-    data = parse_gh_json(out, "board-itens")
+    pid = project_id()
+    if pid is None:
+        record("SKIP", "board-↔-issues", "id do projeto indisponível")
+        return
+    query = ('query { node(id: "%s") { ... on ProjectV2 { items(first: 100) { nodes {'
+             ' content { ... on Issue { number state repository { nameWithOwner } } }'
+             ' fieldValues(first: 30) { nodes {'
+             '   ... on ProjectV2ItemFieldSingleSelectValue { name'
+             '     field { ... on ProjectV2SingleSelectField { name } } } } } } } } } }' % pid)
+    data = graphql(query, "board-itens")
     if data is None:
         return
-    items = data.get("items", [])
+    nodes = (((data.get("data") or {}).get("node") or {}).get("items") or {}).get("nodes", [])
     issues_in_board = {}
+    for node in nodes:
+        content = node.get("content") or {}
+        number = content.get("number")
+        if number is None:
+            continue
+        repo_full = (content.get("repository") or {}).get("nameWithOwner", "")
+        if repo_full and repo_full != REPO:
+            continue
+        item = {"status_raw": content.get("state")}
+        for fv in (node.get("fieldValues") or {}).get("nodes", []):
+            field = ((fv or {}).get("field") or {}).get("name")
+            if field:
+                item[field.lower()] = (fv or {}).get("name")
+        issues_in_board[number] = item
     problems = []
-    for item in items:
-        content = item.get("content", {})
-        if content.get("type") != "Issue":
-            continue
-        repo_full = content.get("repository", "")
-        if repo_full and not repo_full.endswith(REPO):
-            continue
-        issues_in_board[content.get("number")] = item
     for issue in issues:
         n = issue["number"]
         item = issues_in_board.get(n)
@@ -377,18 +386,24 @@ def check_board(issues: list[dict] | None) -> None:
 
 
 def check_board_fields_documented() -> None:
-    out = run(["gh", "project", "field-list", str(PROJECT), "--owner", project_owner(),
-               "--format", "json"], "board-campos")
-    data = parse_gh_json(out, "board-campos")
+    pid = project_id()
+    if pid is None:
+        record("SKIP", "board-campos", "id do projeto indisponível")
+        return
+    query = ('query { node(id: "%s") { ... on ProjectV2 { fields(first: 50) { nodes {'
+             ' ... on ProjectV2FieldCommon { name }'
+             ' ... on ProjectV2SingleSelectField { options { name } } } } } } }' % pid)
+    data = graphql(query, "board-campos")
     if data is None:
         return
+    nodes = (((data.get("data") or {}).get("node") or {}).get("fields") or {}).get("nodes", [])
     doc = (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")
     problems = []
-    for field in data.get("fields", []):
+    for field in nodes:
         name = field.get("name", "")
         if name not in ("Status", "Priority", "Area", "Effort", "Tipo"):
             continue
-        for opt in field.get("options", []):
+        for opt in field.get("options") or []:
             val = opt.get("name", "")
             if val and f"`{val}`" not in doc and val not in doc:
                 problems.append(f"opção '{name}: {val}' não documentada")

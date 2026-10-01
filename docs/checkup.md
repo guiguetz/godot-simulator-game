@@ -85,7 +85,6 @@ cada push/PR na `main`, **sem** o filtro de `docs/**` (ao contrário do
   habilitar: crie o PAT e adicione como **Settings → Secrets and variables →
   Actions → New repository secret** (`PROJECTS_TOKEN`).
 
-> O `gh` exige o escopo `read:org` para resolver o dono do board pelo login.
-> Sem ele, o checkup resolve a identidade autenticada (`gh api user`) e usa
-> `--owner @me` quando o login é o próprio dono — por isso `project +
-> public_repo` bastam.
+> As checagens de board usam **GraphQL** (escopo `project`), não o `gh project`
+> — que no gh 2.101 exige `read:org`/`read:discussion` até para leitura. Por
+> isso os escopos `project + public_repo` bastam.
