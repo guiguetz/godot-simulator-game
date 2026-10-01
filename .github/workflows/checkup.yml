@@ -14,6 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Diagnóstico do token
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          echo "--- tipo/escopos do token (sem expor o valor) ---"
+          gh api -i user 2>/dev/null | grep -iE 'x-oauth-scopes|x-accepted-oauth-scopes|x-accepted-github-permissions' \
+            || echo "(nenhum header de escopo — provável fine-grained PAT)"
+          echo "--- gh project view ---"
+          gh project view 1 --owner guiguetz 2>&1 | head -5 || true
+
       - name: Checkup
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
