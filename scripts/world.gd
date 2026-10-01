@@ -21,6 +21,10 @@ const SOIL := 3
 const SRC_TO_TERRAIN := {0: WATER, 1: DIRT, 2: SOIL}
 const TERRAIN_TO_SRC := {WATER: 0, DIRT: 1, SOIL: 2}
 
+## `NONE` (grama) nao tem tile proprio, entao nao da para marcar `tillable` na
+## TileSet; este e o valor padrao documentado para materiais sem tile.
+const TILLABLE_FALLBACK := true
+
 const TEX_GRASS := "res://assets/tiles/ground_grass.png"
 const TEX_WATER := "res://assets/tiles/terrain_water.png"
 const TEX_DIRT := "res://assets/tiles/terrain_dirt.png"
@@ -146,17 +150,32 @@ func _build_walkable(masks: Dictionary) -> void:
 				_walkable[i] = 0
 
 
-func _is_walkable_terrain(tid: int) -> bool:
+## Le a custom data `key` do material `tid` na TileSet. Sem fonte/tile/data
+## correspondente, retorna `fallback`.
+func _custom_data(tid: int, key: String, fallback: bool) -> bool:
 	var src = TERRAIN_TO_SRC.get(tid, -1)
 	if src < 0:
-		return true
+		return fallback
 	var source := _terrain.tile_set.get_source(src) as TileSetAtlasSource
 	if source == null:
-		return true
+		return fallback
 	var data := source.get_tile_data(Vector2i(3, 3), 0)
 	if data == null:
-		return true
-	return bool(data.get_custom_data("walkable"))
+		return fallback
+	return bool(data.get_custom_data(key))
+
+
+func _is_walkable_terrain(tid: int) -> bool:
+	return _custom_data(tid, "walkable", true)
+
+
+func _is_tillable_terrain(tid: int) -> bool:
+	return _custom_data(tid, "tillable", TILLABLE_FALLBACK)
+
+
+## Indica se a enxada pode transformar a celula em `SOIL` (dados do TileSet).
+func is_tillable_cell(cell: Vector2i) -> bool:
+	return _is_tillable_terrain(terrain_at(cell))
 
 
 func is_walkable(world_pos: Vector2) -> bool:
@@ -374,7 +393,7 @@ func use_tool(tool: int, seed: int, cell: Vector2i) -> void:
 
 	match tool:
 		Enums.Tool.HOE:
-			if terrain_at(cell) in [NONE, DIRT] and is_walkable_cell(cell):
+			if is_tillable_cell(cell) and is_walkable_cell(cell):
 				set_terrain(cell, SOIL)
 				AudioManager.play_sfx("hoe")
 		Enums.Tool.WATER:

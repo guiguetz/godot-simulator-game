@@ -16,7 +16,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 
 | ID | Título | Status | Prioridade | Esforço |
 |---|---|---|---|---|
-| [001](001-propriedade-tillable.md) | Propriedade `tillable` no terreno | Proposto | Média | P |
+| [001](001-propriedade-tillable.md) | Propriedade `tillable` no terreno | Concluído | Média | P |
 | [002](002-menus-de-debug.md) | Menus de debug / controles internos | Proposto | Média | M |
 | [003](003-estrutura-de-testes-gdunit.md) | Estrutura de testes com gdUnit4 | Proposto | Alta | M |
 | [004](004-dividir-readme-em-docs.md) | Dividir README em docs/ por sistema | Proposto | Baixa | P |

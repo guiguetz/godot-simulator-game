@@ -1,6 +1,6 @@
 # 001 — Propriedade `tillable` no terreno
 
-- **Status:** Proposto
+- **Status:** Concluído
 - **Prioridade:** Média
 - **Esforço:** P (horas)
 - **Depende de:** — (relaciona-se ao bug da caixa de andabilidade,
@@ -122,22 +122,22 @@ Falta o equivalente para "arar".
 
 ## Tarefas
 
-- [ ] Adicionar `custom_data_layer_1 = "tillable"` em `terrain_paint.tres`
-- [ ] Marcar terra (`source 1`) como `tillable = true`
-- [ ] Extrair `_custom_data()` e reescrever `_is_walkable_terrain()`
-- [ ] Implementar `_is_tillable_terrain()` e `is_tillable_cell()`
-- [ ] Trocar a checagem hardcoded em `use_tool` por `is_tillable_cell`
-- [ ] Cobrir no `tools/smoke_test.gd` (terra ara, água não ara)
-- [ ] Atualizar `README.md` se a API pública do mundo for citada
+- [x] Adicionar `custom_data_layer_1 = "tillable"` em `terrain_paint.tres`
+- [x] Marcar terra (`source 1`) como `tillable = true`
+- [x] Extrair `_custom_data()` e reescrever `_is_walkable_terrain()`
+- [x] Implementar `_is_tillable_terrain()` e `is_tillable_cell()`
+- [x] Trocar a checagem hardcoded em `use_tool` por `is_tillable_cell`
+- [x] Cobrir no `tools/smoke_test.gd` (terra ara, água não ara)
+- [x] Atualizar `README.md`/`docs/world.md` com a API pública do mundo
 
 ## Critérios de aceite
 
-- [ ] Enxada em grama vira `SOIL` (regressão zero).
-- [ ] Enxada em `DIRT` vira `SOIL`.
-- [ ] Enxada em `WATER` não altera o terreno nem toca som de enxada.
-- [ ] Alterar `tillable` na aba TileSet muda o comportamento sem recompilar
+- [x] Enxada em grama vira `SOIL` (regressão zero).
+- [x] Enxada em `DIRT` vira `SOIL`.
+- [x] Enxada em `WATER` não altera o terreno nem toca som de enxada.
+- [x] Alterar `tillable` na aba TileSet muda o comportamento sem recompilar
       lógica de jogo (só a leitura de dados).
-- [ ] `walkable` continua funcionando exatamente como antes (camada 0 intacta).
+- [x] `walkable` continua funcionando exatamente como antes (camada 0 intacta).
 
 ## Riscos / Notas
 
