@@ -13,6 +13,7 @@ nunca no wiki.
 |---|---|
 | [`github-projects.md`](github-projects.md) | Board, campos, labels, views e fluxo de trabalho |
 | [`workflow.md`](workflow.md) | Fluxos do dia a dia: assumir issue, criar novo, automações |
+| [`player.md`](player.md) | Movimento do personagem e caixa de andabilidade |
 | [`checkup.md`](checkup.md) | Checkup de consistência (planos, issues, board, labels) |
 | [`sync-wiki.md`](sync-wiki.md) | Como o wiki é gerado a partir de `docs/` |
 | [`adr/`](adr/README.md) | Decisões de arquitetura (ADRs) |
