@@ -153,7 +153,16 @@ python3 tools/gen_player_frames.py
 # Smoke test headless (ferramentas, plantio, colheita, máquinas, save/load)
 /home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --headless --path . \
   --script tools/smoke_test.gd
+
+# Suíte gdUnit4 (testes automatizados)
+/home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --headless --path . \
+  -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a tests --ignoreHeadlessMode -c
+
+# Regenerar cache de classes (necessário após criar novos scripts)
+/home/guilherme/godot/Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
 ```
+
+Detalhes das convenções e mapa de cobertura em [`tests/README.md`](tests/README.md).
 
 ## Configuração
 

@@ -38,6 +38,10 @@ window/stretch/mode="canvas_items"
 
 enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
+[gdunit4]
+
+settings/test/test_lookup_folder="tests"
+
 [gui]
 
 theme/custom_font="res://assets/graphics/fonts/PixeloidSans.ttf"
