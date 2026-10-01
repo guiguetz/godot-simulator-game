@@ -1,0 +1,21 @@
+name: Checkup
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checkup:
+    name: Consistência (planos, issues, labels, docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 .agents/skills/checkup/scripts/checkup.py --no-board --no-smoke

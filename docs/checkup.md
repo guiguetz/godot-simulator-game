@@ -13,6 +13,7 @@ script funciona sozinho:
 python3 .agents/skills/checkup/scripts/checkup.py           # checkup completo
 python3 .agents/skills/checkup/scripts/checkup.py --offline # sem rede/GitHub
 python3 .agents/skills/checkup/scripts/checkup.py --no-smoke # pula o smoke test
+python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Projects (CI)
 ```
 
 ## O que é verificado
@@ -23,9 +24,11 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-smoke # pula o smoke test
 | `índice-de-planos` | Cada `plans/NNN-*.md` tem linha no índice e vice-versa |
 | `template-de-planos` | Planos têm Objetivo, Status, Prioridade, Esforço, Critérios de aceite |
 | `labels-do-repo` / `labels-de-template` | Labels usadas nos templates existem no repo |
-| `labels-documentadas` | Toda label convencional está em `docs/github-projects.md` |
+| `labels-documentadas` | Toda label convencional do repo está em `docs/github-projects.md` |
+| `labels-catalogadas` | Toda label catalogada na doc existe no repo |
 | `issue-type-label` | Issues abertas têm label `type:*` |
 | `planos-↔-issues` | Todo plano tem issue `[Plano NNN]` linkando o arquivo, e vice-versa |
+| `prs-↔-issues` | PRs abertos referenciam alguma issue (`#N`) |
 | `board-↔-issues` | Issues estão no board, com `Priority`/`Tipo`/`Area`/`Effort` preenchidos e `Status` coerente com o estado da issue |
 | `board-campos-documentados` | Opções dos campos do board batem com a doc |
 | `smoke-test` | Roda o smoke test headless do Godot |
@@ -42,3 +45,15 @@ permite usar o script em CI ou em hooks.
 3. Re rode até zerar os FAILs.
 4. Se uma regra do `AGENTS.md` deixou de fazer sentido, atualize `AGENTS.md` e
    o checkup **no mesmo commit** — nunca ajuste o script para mascarar um FAIL.
+
+## Cadência
+
+- **Antes de abrir PR:** checkup completo (com smoke test).
+- **Fim de sessão de gestão** (issues/board/planos): `--no-smoke`.
+- **Cada edição de código:** não é necessário rodar.
+
+## No CI
+
+O workflow [`checkup.yml`](../.github/workflows/checkup.yml) roda o checkup a
+cada push/PR na `main`, **sem** o filtro de `docs/**` (ao contrário do
+`ci.yml`), e usa `--no-board` porque o token do CI não tem escopo de Projects.

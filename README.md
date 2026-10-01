@@ -102,6 +102,8 @@ docs/adr/                 Decisões de arquitetura (ADRs) e template
 tools/gen_player_frames.py     Gera as skins do personagem
 tools/generate_placeholders.py Gera os PNGs placeholder
 tools/smoke_test.gd            Smoke test headless
+.agents/skills/                Skills do pi (checkup, issue) e scripts de gestão
+docs/checkup.md                Checkup de consistência do repositório
 ```
 
 ## Personagem (skins)
@@ -124,6 +126,8 @@ Bugs, features e roadmap são gerenciados no **GitHub Projects**:
 - **Issues de plano** usem o template 🗺️ Plano e linkam o arquivo de `plans/`.
 - **CI** (`.github/workflows/ci.yml`): roda o smoke test headless e, quando
   existir `tests/`, a suíte gdUnit4, a cada push/PR na `main`.
+- **Checkup** (`.github/workflows/checkup.yml`): valida planos, issues, labels
+  e docs a cada push/PR; detalhes em [`docs/checkup.md`](docs/checkup.md).
 
 ## Rodar / testar
 

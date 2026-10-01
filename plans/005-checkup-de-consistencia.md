@@ -1,6 +1,6 @@
 # 005 — Checkup de consistência (skill + automação)
 
-- **Status:** Em andamento
+- **Status:** Concluído
 - **Prioridade:** Média
 - **Esforço:** P (horas)
 - **Depende de:** —

@@ -8,7 +8,8 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 
 1. **Bug discutido → abrir issue imediatamente.**
    Sempre que uma conversa identificar um defeito ou regressão, crie a issue
-   **antes** de propor a correção:
+   **antes** de propor a correção — de preferência com a skill `issue`
+   (`/skill:issue`), que já preenche labels e campos do board:
    ```bash
    gh issue create --repo guiguetz/godot-simulator-game \
      --template bug.yml --title "..." --body "..."
@@ -23,7 +24,8 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
    Ao decidir construir algo novo:
    - crie `plans/NNN-titulo-curto.md` seguindo o template de `plans/README.md`
      (NNN = próximo número livre), atualize o índice do `plans/README.md`;
-   - abra a issue `[Plano NNN] ...` com `--template plano.yml` linkando o arquivo;
+   - abra a issue `[Plano NNN] ...` com `--template plano.yml` linkando o arquivo
+     (ou a skill `issue` com `--plan-file plans/NNN-*.md`);
    - garanta que o item entrou no board (<https://github.com/users/guiguetz/projects/1>)
      e preencha `Status`, `Priority`, `Tipo`, `Area`, `Effort`
      (ids/CLI em `docs/github-projects.md`).
@@ -44,21 +46,35 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
    Se uma regra deixar de fazer sentido, atualize `AGENTS.md` e o checkup no
    mesmo commit — nunca ajuste o checkup para mascarar um FAIL.
 
+   **Cadência:**
+   - **antes de abrir PR:** checkup completo (com smoke test);
+   - **fim de sessão de gestão** (mexeu em issues/board/planos):
+     `--no-smoke`;
+   - não é preciso rodar a cada edição de código.
+
+5. **Rastreabilidade issue ↔ PR ↔ commit.**
+   - o PR referencia a issue correspondente com `Fixes #N` no corpo;
+   - a mensagem de commit traz o sufixo `(#N)`;
+   - ao abrir o PR, mova o item do board para **In Review**; o merge/fechamento
+     leva a **Done** pelo workflow embutido.
+
 ## Regras de trabalho
 
 - **Idioma:** responda e escreva docs em **português (pt-BR)**. Identificadores
   de código permanecem em inglês.
 - **Antes de codar:** leia os arquivos envolvidos; não invente APIs/sinais.
   Consulte `README.md` (mapa dos scripts) e `plans/NNN-*.md` (design acordado).
-- **Um escopo por PR:** vincule o PR à issue correspondente.
+- **Git:** commits no imperativo, com prefixo de tipo (`feat:`, `fix:`,
+  `docs:`, `ci:`, `chore:`), seguindo o histórico (`git log --oneline`) e com o
+  sufixo `(#N)` da issue quando houver.
+- **Um escopo por PR:** vincule o PR à issue correspondente com `Fixes #N` e
+  mova o item do board para **In Review** ao abri-lo.
 - **Verificação:** rode o smoke test headless antes de declarar concluído:
   ```bash
   godot --headless --path . --script tools/smoke_test.gd
   ```
   Testes automatizados (gdUnit4) estão descritos em
   [`plans/003-estrutura-de-testes-gdunit.md`](plans/003-estrutura-de-testes-gdunit.md).
-- **Git:** commits no imperativo, com prefixo de tipo (`feat:`, `fix:`,
-  `docs:`, `ci:`, `chore:`), seguindo o histórico (`git log --oneline`).
 - **Não** feche issue de bug sem verificação registrada; **não** mova plano
   para *Concluído* sem cumprir os critérios de aceite do próprio plano.
 - Se uma operação exigir permissão que você não tem (ex.: editar views do
@@ -75,3 +91,4 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 | Templates de issue | `.github/ISSUE_TEMPLATE/` |
 | CI | `.github/workflows/ci.yml` |
 | Checkup de consistência | `docs/checkup.md`, `.agents/skills/checkup/` |
+| Criar issue + board + labels | `.agents/skills/issue/` |

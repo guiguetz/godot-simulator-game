@@ -157,6 +157,13 @@ def check_labels_documented() -> None:
     else:
         record("OK", "labels-documentadas", "todas as labels convencionais estão em docs/github-projects.md")
 
+    documented = set(re.findall(r"`((?:type|area|priority|effort):[\w-]+)`", doc))
+    missing = sorted(l for l in documented if l not in LABELS_IN_REPO)
+    if missing:
+        record("FAIL", "labels-catalogadas", f"documentadas mas ausentes no repo: {missing}")
+    else:
+        record("OK", "labels-catalogadas", "todas as labels catalogadas existem no repo")
+
 
 def check_issues() -> tuple[dict[int, dict], list[dict]]:
     out = run(
@@ -289,10 +296,28 @@ def check_smoke_test() -> None:
         record("OK", "smoke-test", f"PASS ({passes} verificações)")
 
 
+def check_prs() -> None:
+    out = run(["gh", "pr", "list", "--repo", REPO, "--state", "open", "--limit", "100",
+               "--json", "number,title,body,url"], "prs-↔-issues")
+    data = parse_gh_json(out, "prs-↔-issues")
+    if data is None:
+        return
+    if not data:
+        record("OK", "prs-↔-issues", "nenhum PR aberto")
+        return
+    problems = [f"PR #{pr['number']} não referencia nenhuma issue" for pr in data
+                if not re.search(r"#\d+", pr.get("body") or "")]
+    if problems:
+        record("FAIL", "prs-↔-issues", "; ".join(problems))
+    else:
+        record("OK", "prs-↔-issues", f"{len(data)} PR(s) aberto(s) com issue vinculada")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--offline", action="store_true", help="pula checagens que usam gh/rede e o smoke test")
     parser.add_argument("--no-smoke", action="store_true", help="não roda o smoke test do Godot")
+    parser.add_argument("--no-board", action="store_true", help="pula checagens do GitHub Projects (útil no CI)")
     args = parser.parse_args()
 
     print(f"== Checkup de consistência — {REPO} ==")
@@ -315,8 +340,12 @@ def main() -> int:
         check_labels_documented()
         issues_by_number, issues = check_issues()
         check_plans_issues(issues_by_number, issues)
-        check_board(issues)
-        check_board_fields_documented()
+        check_prs()
+        if args.no_board:
+            record("SKIP", "board", "--no-board")
+        else:
+            check_board(issues)
+            check_board_fields_documented()
         if args.no_smoke:
             record("SKIP", "smoke-test", "--no-smoke")
         else:

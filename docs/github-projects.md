@@ -64,6 +64,7 @@ catalogada aqui — o checkup valida essa correspondência.
 | `area:npcs` | Criaturas e NPCs |
 | `area:tests` | Testes automatizados e smoke test |
 | `area:weather` | Clima, dia/noite, relógio |
+| `area:tooling` | Scripts, CI, ferramentas de dev |
 | `priority:p0` | Urgente / bloqueia jogo (campo `P0 - Critical`) |
 | `priority:p1` | Alta prioridade (campo `P1 - High`) |
 | `priority:p2` | Média prioridade (campo `P2 - Medium`) |
@@ -105,6 +106,10 @@ Regras do projeto:
   issue `[Plano NNN] ...` que linka o arquivo. O plano é a fonte de detalhe.
 - Ao concluir, a issue é fechada; o aprendizado relevante sobe para o
   `README.md` ou para o próprio plano (marcado como **Concluído**).
+- **Rastreabilidade:** o PR referencia a issue com `Fixes #N` no corpo; o
+  commit traz o sufixo `(#N)`. Ao abrir o PR, mova o item do board para
+  **In Review**; o merge (ou o fechamento da issue) leva a **Done** pelo
+  workflow embutido.
 
 ## Automações
 
@@ -137,11 +142,21 @@ gh project item-edit --id <ITEM_ID> \
   --field-id <FIELD_ID> --single-select-option-id <OPTION_ID>
 ```
 
-## Estado atual do board
+> Atalho: a skill `issue` (`.agents/skills/issue/`) cria a issue já com
+> labels convencionais e campos do board resolvidos em runtime
+> (`python3 .agents/skills/issue/scripts/new_issue.py --help`).
 
-Bugs #1/#2/#3 foram corrigidos e fechados (z-order do mundo) → `Done`.
-O bug #4 (caixa de andabilidade) segue em `Backlog`.
-Os planos 001–003 estão como issues #5–#7:
-[#5](https://github.com/guiguetz/godot-simulator-game/issues/5) `Backlog`,
-[#6](https://github.com/guiguetz/godot-simulator-game/issues/6) `Backlog`,
-[#7](https://github.com/guiguetz/godot-simulator-game/issues/7) `Ready`.
+## Criação de issues
+
+Use a skill `issue` no pi (`/skill:issue`) ou o script direto. Exemplo:
+
+```bash
+python3 .agents/skills/issue/scripts/new_issue.py \
+  --title "Caixa de andabilidade maior que o tile" \
+  --tipo Bug --area Player --priority "P2 - Medium" --effort "P (horas)" \
+  --body-file /tmp/bug.md
+```
+
+O script cria a issue, adiciona ao board e preenche `Tipo`, `Area`,
+`Priority`, `Effort` e `Status` — sem ids hardcoded (consulta
+`gh project field-list`). `--dry-run` mostra o que seria feito.
