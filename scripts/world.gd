@@ -63,6 +63,9 @@ func _ready() -> void:
 func _rebuild_world() -> void:
 	_clear_ground()
 	_build_ground()
+	# If TerrainPaint is empty, populate with demo map
+	if _terrain_paint.get_used_cells().size() == 0:
+		_seed_demo()
 	_refresh_from_paint()
 
 
