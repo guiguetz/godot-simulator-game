@@ -240,16 +240,30 @@ func _build_walkable_from_tilemapdual() -> void:
 ## Le a custom data `key` do material `tid` na TileSet. Sem fonte/tile/data
 ## correspondente, retorna `fallback`.
 func _custom_data(tid: int, key: String, fallback: bool) -> bool:
-	var src = TERRAIN_TO_SRC.get(tid, -1)
-	if src < 0:
-		return fallback
-	var source := _terrain.tile_set.get_source(src) as TileSetAtlasSource
-	if source == null:
-		return fallback
-	var data := source.get_tile_data(Vector2i(3, 3), 0)
-	if data == null:
-		return fallback
-	return bool(data.get_custom_data(key))
+	if use_tilemap_dual and _terrain_water != null:
+		# TileMapDual mode: use hardcoded values for now
+		# TODO: migrate custom data to TileMapDual TileSets
+		match tid:
+			WATER:
+				return false # Water is not walkable/tillable
+			DIRT:
+				return true # Dirt is walkable
+			SOIL:
+				return true # Soil is walkable and tillable
+			_:
+				return fallback
+	else:
+		# Legacy mode: read from TileSet
+		var src = TERRAIN_TO_SRC.get(tid, -1)
+		if src < 0:
+			return fallback
+		var source := _terrain.tile_set.get_source(src) as TileSetAtlasSource
+		if source == null:
+			return fallback
+		var data := source.get_tile_data(Vector2i(3, 3), 0)
+		if data == null:
+			return fallback
+		return bool(data.get_custom_data(key))
 
 
 func _is_walkable_terrain(tid: int) -> bool:
