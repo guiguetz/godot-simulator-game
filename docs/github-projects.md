@@ -38,6 +38,40 @@ type:tech-debt  area:tests      priority:p3     effort:G
 Labels genéricas herdadas do GitHub (`bug`, `enhancement`, `good first issue`)
 continuam válidas e podem ser combinadas.
 
+### Tabela completa de labels convencionais
+
+Toda label com prefixo `type:`, `area:`, `priority:` ou `effort:` deve estar
+catalogada aqui — o checkup valida essa correspondência.
+
+| Label | Descrição |
+|---|---|
+| `type:feature` | Nova funcionalidade / melhoria de jogo |
+| `type:bug` | Defeito ou regressão |
+| `type:tech-debt` | Refatoração, arquitetura, qualidade interna |
+| `type:art` | Arte, sprites, tiles, animações |
+| `type:design` | Design de jogo, balanceamento, UX |
+| `type:docs` | Documentação |
+| `type:tooling` | Scripts, CI, ferramentas de dev |
+| `area:world` | Mundo, terreno, dual grid, colisão |
+| `area:player` | Player, movimento, ferramentas |
+| `area:farming` | Plantações, crescimento, colheita |
+| `area:machines` | Aspersor, espantalho, pescador |
+| `area:fishing` | Minigame de pesca |
+| `area:inventory-shop` | Inventário, hotbar, loja, moedas |
+| `area:audio` | SFX, música, chuva |
+| `area:save-load` | Persistência e save/load |
+| `area:ui` | HUD, menus, pausa, debug |
+| `area:npcs` | Criaturas e NPCs |
+| `area:tests` | Testes automatizados e smoke test |
+| `area:weather` | Clima, dia/noite, relógio |
+| `priority:p0` | Urgente / bloqueia jogo (campo `P0 - Critical`) |
+| `priority:p1` | Alta prioridade (campo `P1 - High`) |
+| `priority:p2` | Média prioridade (campo `P2 - Medium`) |
+| `priority:p3` | Baixa prioridade (campo `P3 - Low`) |
+| `effort:P` | Esforço P (horas) |
+| `effort:M` | Esforço M (dias) |
+| `effort:G` | Esforço G (semana+) |
+
 ## Views
 
 | View | Layout | Filtro |

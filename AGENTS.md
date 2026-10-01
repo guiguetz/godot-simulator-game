@@ -37,6 +37,13 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
      estrutura de arquivos ou fluxo de gestão;
    - a doc entra no **mesmo** commit/PR da implementação, não "depois".
 
+4. **Checkup de consistência antes de encerrar.**
+   Antes de encerrar uma sessão ou abrir PR, rode o checkup
+   (`/skill:checkup` no pi, ou `python3 .agents/skills/checkup/scripts/checkup.py`)
+   e corrija os FAILs na fonte. Detalhes em [`docs/checkup.md`](docs/checkup.md).
+   Se uma regra deixar de fazer sentido, atualize `AGENTS.md` e o checkup no
+   mesmo commit — nunca ajuste o checkup para mascarar um FAIL.
+
 ## Regras de trabalho
 
 - **Idioma:** responda e escreva docs em **português (pt-BR)**. Identificadores
@@ -67,3 +74,4 @@ e [`plans/README.md`](plans/README.md) — em caso de conflito, elas vencem.
 | Visão geral do jogo, controles, scripts | `README.md` |
 | Templates de issue | `.github/ISSUE_TEMPLATE/` |
 | CI | `.github/workflows/ci.yml` |
+| Checkup de consistência | `docs/checkup.md`, `.agents/skills/checkup/` |
