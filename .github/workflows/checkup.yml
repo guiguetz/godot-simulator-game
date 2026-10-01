@@ -21,6 +21,11 @@ jobs:
           echo "--- tipo/escopos do token (sem expor o valor) ---"
           gh api -i user 2>/dev/null | grep -iE 'x-oauth-scopes|x-accepted-oauth-scopes|x-accepted-github-permissions' \
             || echo "(nenhum header de escopo — provável fine-grained PAT)"
+          echo "--- conta do token ---"
+          gh api user -q .login 2>&1 || true
+          echo "--- graphql: projectV2 de guiguetz ---"
+          gh api graphql -f query='{ user(login:"guiguetz"){ projectV2(number:1){ id title } } }' 2>&1 | head -c 300 || true
+          echo
           echo "--- gh project view ---"
           gh project view 1 --owner guiguetz 2>&1 | head -5 || true
 
