@@ -23,7 +23,7 @@ const TERRAIN_TO_SRC := {WATER: 0, DIRT: 1, SOIL: 2}
 
 ## `NONE` (grama) nao tem tile proprio, entao nao da para marcar `tillable` na
 ## TileSet; este e o valor padrao documentado para materiais sem tile.
-const TILLABLE_FALLBACK := true
+const TILLABLE_FALLBACK := false
 
 const TEX_GRASS := "res://assets/tiles/ground_grass.png"
 const TEX_WATER := "res://assets/tiles/terrain_water.png"

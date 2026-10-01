@@ -9,7 +9,9 @@ extends SimTestSuite
 func test_fluxo_completo() -> void:
 	var w: Node2D = boot_game()
 	var cell := Vector2i(25, 25)
-	# 1) Ara grama -> solo.
+	# 0) Prepara terreno como DIRT (fallback tillable = false).
+	w.call("set_terrain", cell, 2)
+	# 1) Ara DIRT -> solo.
 	w.call("use_tool", Enums.Tool.HOE, 0, cell)
 	assert_that(int(w.call("terrain_at", cell))).is_equal(3)  # SOIL
 
