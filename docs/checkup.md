@@ -23,6 +23,7 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Pro
 | `arquivos-base` | Arquivos referenciados pelo `AGENTS.md` existem |
 | `índice-de-planos` | Cada `plans/NNN-*.md` tem linha no índice e vice-versa |
 | `template-de-planos` | Planos têm Objetivo, Status, Prioridade, Esforço, Critérios de aceite |
+| `docs-↔-índice` | Todo doc em `docs/` está no índice e os links do índice não estão mortos |
 | `labels-do-repo` / `labels-de-template` | Labels usadas nos templates existem no repo |
 | `labels-documentadas` | Toda label convencional do repo está em `docs/github-projects.md` |
 | `labels-catalogadas` | Toda label catalogada na doc existe no repo |

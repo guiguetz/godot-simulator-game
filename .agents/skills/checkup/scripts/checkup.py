@@ -130,6 +130,36 @@ def check_template_labels(template_labels: dict[str, list[str]]) -> set[str]:
     return all_needed
 
 
+def check_docs_index() -> None:
+    docs_dir = ROOT / "docs"
+    index_path = docs_dir / "README.md"
+    if not index_path.is_file():
+        record("FAIL", "docs-↔-índice", "docs/README.md não encontrado")
+        return
+    text = index_path.read_text(encoding="utf-8")
+    links = re.findall(r"\]\(([^)]+)\)", text)
+    linked: set[str] = set()
+    dead: list[str] = []
+    for link in links:
+        if link.startswith(("http://", "https://", "#")):
+            continue
+        target = link.split("#", 1)[0]
+        linked.add(target.lstrip("./") if target.startswith("./") else target)
+        if not (docs_dir / target).exists():
+            dead.append(link)
+    files = {p.name for p in docs_dir.glob("*.md") if p.name != "README.md"}
+    missing = sorted(f for f in files if f not in linked)
+    problems = []
+    if missing:
+        problems.append(f"sem link no índice de docs/README.md: {missing}")
+    if dead:
+        problems.append(f"links mortos no índice: {dead}")
+    if problems:
+        record("FAIL", "docs-↔-índice", "; ".join(problems))
+    else:
+        record("OK", "docs-↔-índice", f"{len(files)} docs indexados e links válidos")
+
+
 # --------------------------------------------------------------- github checks
 
 LABELS_IN_REPO: set[str] = set()
@@ -361,6 +391,7 @@ def main() -> int:
     check_docs_and_templates()
     check_plans_index()
     check_plan_template()
+    check_docs_index()
 
     template_labels = {
         "bug.yml": ["bug", "type:bug"],
