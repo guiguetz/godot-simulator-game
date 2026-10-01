@@ -33,6 +33,7 @@ python3 .agents/skills/checkup/scripts/checkup.py --no-board # pula o GitHub Pro
 | `prs-↔-issues` | PRs abertos referenciam alguma issue (`#N`) |
 | `board-↔-issues` | Issues estão no board, com `Priority`/`Tipo`/`Area`/`Effort` preenchidos e `Status` coerente com o estado da issue |
 | `board-campos-documentados` | Opções dos campos do board batem com a doc |
+| `board-views` | Nome, layout e filtro das views batem com a doc |
 | `board-workflows` | Workflows ativos no board batem com a tabela da doc |
 | `smoke-test` | Roda o smoke test headless do Godot |
 

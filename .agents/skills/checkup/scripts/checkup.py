@@ -325,6 +325,57 @@ def check_board_fields_documented() -> None:
         record("OK", "board-campos-documentados", "opções dos campos do board batem com docs/github-projects.md")
 
 
+LAYOUTS = {"tabela": "TABLE_LAYOUT", "board": "BOARD_LAYOUT", "roadmap": "ROADMAP_LAYOUT"}
+
+
+def check_board_views() -> None:
+    doc = (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")
+    section = re.search(r"## Views\n(.*?)(?=\n## )", doc, re.S)
+    if not section:
+        record("WARN", "board-views", "seção '## Views' não encontrada em docs/github-projects.md")
+        return
+    expected: dict[str, dict] = {}
+    for line in section.group(1).splitlines():
+        cols = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cols) != 3 or not cols[0] or cols[0] == "View" or set(cols[0]) <= set("-: "):
+            continue
+        name, layout_cell, filter_cell = cols
+        expected[name] = {
+            "layout": LAYOUTS.get(layout_cell.split()[0].lower(), layout_cell),
+            "filter": None if filter_cell in ("—", "-", "") else filter_cell.strip("`"),
+        }
+    if not expected:
+        record("WARN", "board-views", "tabela de views vazia em docs/github-projects.md")
+        return
+    view = parse_gh_json(
+        run(["gh", "project", "view", str(PROJECT), "--owner", OWNER, "--format", "json"],
+            "board-views"), "board-views")
+    if view is None:
+        return
+    query = ('query { node(id: "%s") { ... on ProjectV2 { views(first: 20) '
+             '{ nodes { name layout filter } } } } }' % view["id"])
+    data = parse_gh_json(run(["gh", "api", "graphql", "-f", f"query={query}"],
+                             "board-views"), "board-views")
+    if data is None:
+        return
+    actual = {v["name"]: {"layout": v["layout"], "filter": v["filter"]}
+              for v in data["data"]["node"]["views"]["nodes"]}
+    problems = []
+    for name, exp in expected.items():
+        if name not in actual:
+            problems.append(f"view '{name}' documentada mas inexistente no board")
+            continue
+        if actual[name]["layout"] != exp["layout"]:
+            problems.append(f"'{name}': layout doc={exp['layout']} real={actual[name]['layout']}")
+        if (actual[name]["filter"] or None) != exp["filter"]:
+            problems.append(f"'{name}': filtro doc={exp['filter']!r} real={actual[name]['filter']!r}")
+    problems += [f"view '{n}' no board mas não documentada" for n in actual if n not in expected]
+    if problems:
+        record("FAIL", "board-views", "; ".join(problems))
+    else:
+        record("OK", "board-views", f"{len(expected)} views batem com docs/github-projects.md")
+
+
 def check_board_workflows() -> None:
     doc = (ROOT / "docs/github-projects.md").read_text(encoding="utf-8")
     expected: dict[str, bool] = {}
@@ -440,6 +491,7 @@ def main() -> int:
         else:
             check_board(issues)
             check_board_fields_documented()
+            check_board_views()
             check_board_workflows()
         if args.no_smoke:
             record("SKIP", "smoke-test", "--no-smoke")
