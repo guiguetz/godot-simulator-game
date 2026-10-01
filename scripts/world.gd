@@ -605,11 +605,7 @@ func _setup_camera() -> void:
 # --- Mapa de exemplo (botao do inspetor) ------------------------------------
 
 func _seed_demo() -> void:
-	if not Engine.is_editor_hint():
-		return
-	_terrain_water.clear()
-	_terrain_dirt.clear()
-	_terrain_soil.clear()
+	_terrain_paint.clear()
 	_paint_mask(_make_water_mask(), WATER)
 	_paint_mask(_make_dirt_mask(), DIRT)
 	_paint_mask(_make_soil_mask(), SOIL)
