@@ -43,6 +43,8 @@ fica em `user://savegame.json`.
 - **Mundo dual grid** (`scripts/dual_grid.gd`, `scripts/world.gd`): água,
   trilha e canteiro pintados numa camada lógica; o dual grid e a andabilidade
   são reconstruídos ao vivo (também no editor, via `@tool`).
+  Andabilidade e aração (`walkable`/`tillable`) vêm de custom data do TileSet —
+  detalhes em [`docs/world.md`](docs/world.md).
 - **Colisão do player** (`scripts/player.gd`): caixa de pés com
   `collision_padding` (padrão 2.0), limitada a meio tile para não travar em
   quinas — detalhes em [`docs/player.md`](docs/player.md).

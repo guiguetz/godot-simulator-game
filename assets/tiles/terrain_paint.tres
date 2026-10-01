@@ -12,6 +12,7 @@ texture = ExtResource("1_7u5s7")
 texture = ExtResource("2_m2jfx")
 3:3/0 = 0
 3:3/0/custom_data_0 = true
+3:3/0/custom_data_1 = true
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ekibe"]
 texture = ExtResource("3_t4xjg")
@@ -21,6 +22,8 @@ texture = ExtResource("3_t4xjg")
 [resource]
 custom_data_layer_0/name = "walkable"
 custom_data_layer_0/type = 1
+custom_data_layer_1/name = "tillable"
+custom_data_layer_1/type = 1
 sources/0 = SubResource("TileSetAtlasSource_fsixq")
 sources/1 = SubResource("TileSetAtlasSource_oxrb5")
 sources/2 = SubResource("TileSetAtlasSource_ekibe")
