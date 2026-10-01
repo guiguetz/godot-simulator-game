@@ -89,6 +89,15 @@ def existing_labels() -> set[str]:
     return {item["name"] for item in data}
 
 
+# Labels genéricas herdadas do GitHub que devem acompanhar o tipo.
+GENERIC_LABELS_BY_TIPO = {
+    "Bug": "bug",
+    "Feature": "enhancement",
+    "Tech Debt": "tech-debt",
+    "Tooling": "enhancement",
+}
+
+
 def derive_labels(args: argparse.Namespace) -> list[str]:
     labels: list[str] = []
     for value, mapping in (
@@ -99,6 +108,11 @@ def derive_labels(args: argparse.Namespace) -> list[str]:
     ):
         if value and value in mapping:
             labels.append(mapping[value])
+    # Adiciona label genérica correspondente ao tipo (bug, enhancement, etc.)
+    if args.tipo and args.tipo in GENERIC_LABELS_BY_TIPO:
+        generic = GENERIC_LABELS_BY_TIPO[args.tipo]
+        if generic not in labels:
+            labels.insert(0, generic)
     labels.extend(l for l in (args.label or []) if l)
     # dedupe preservando ordem
     seen: set[str] = set()
