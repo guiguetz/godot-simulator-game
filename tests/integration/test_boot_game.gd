@@ -17,12 +17,12 @@ func test_grupos_world_e_player() -> void:
 	assert_that(get_tree().get_first_node_in_group("player")).is_not_null()
 
 
-func test_dualgrid_e_terrain_existem() -> void:
+func test_tilemapdual_e_terrainpaint_existem() -> void:
 	var w: Node2D = boot_game()
-	var dg := w.get_node("DualGrid")
-	var terrain := w.get_node("DualGrid/Terrain")
-	assert_that(dg).is_not_null()
-	assert_that(terrain).is_not_null()
+	assert_that(w.get_node("TerrainWater") is TileMapDual).is_true()
+	assert_that(w.get_node("TerrainDirt") is TileMapDual).is_true()
+	assert_that(w.get_node("TerrainSoil") is TileMapDual).is_true()
+	assert_that(w.get_node("TerrainPaint") is TileMapLayer).is_true()
 
 
 func test_entities_e_player() -> void:

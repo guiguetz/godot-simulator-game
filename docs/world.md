@@ -1,86 +1,64 @@
-# Mundo: terreno, andabilidade e aração
+# Mundo: terreno, autotiling e aração
 
-Como o terreno lógico é pintado e como o código lê propriedades por material
-(`scripts/world.gd`, TileSet `assets/tiles/terrain_paint.tres`).
+O terreno usa uma camada lógica para pintura e save/load, mais três camadas
+`TileMapDual` para exibir água, terra e canteiros. A lógica está em
+`scripts/world.gd`; os tiles de exibição ficam em `assets/tiles/display_*.tres`.
 
-## Materiais de terreno
+## Pintura e sincronização
 
-O terreno lógico vive na camada `Game/DualGrid/Terrain`, pintada por **source**
-do TileSet. `world.gd` mapeia source ⇄ tipo:
+`Game/TerrainPaint` é a fonte da verdade: cada célula usa o source ID do
+`assets/tiles/terrain_paint.tres`.
 
 | Tipo | Source | Constante |
-|---|---|---|
+|---|---:|---|
 | Água | 0 | `WATER` |
 | Terra | 1 | `DIRT` |
 | Canteiro | 2 | `SOIL` |
 | Grama (sem tile) | — | `NONE` |
 
-`terrain_at(cell)` devolve o tipo da célula; `set_terrain(cell, tid)` pinta e
-dispara a reconstrução do dual grid.
+No editor, selecione `TerrainPaint` e pinte com a ferramenta de TileMap. O
+nó usa `scripts/terrain_layer.gd`: fica visível e semitransparente enquanto
+selecionado, e some ao selecionar outro nó para revelar o autotiling. Em
+runtime, `TerrainPaint` também fica invisível; isso não afeta `get_used_cells()`
+nem a sincronização. O `world.gd` detecta alterações na camada no editor e
+sincroniza as células com `TerrainWater`, `TerrainDirt` e `TerrainSoil`. Essas
+camadas usam o addon TileMapDual para recalcular o atlas automaticamente. Em
+runtime, `set_terrain(cell, tid)` altera `TerrainPaint` e atualiza a exibição
+pelo mesmo caminho.
 
-## Propriedades por material (custom data)
+O gerador `tools/generate_dual_tilesets.gd` cria os três TileSets de display a
+partir das texturas `terrain_water.png`, `terrain_dirt.png` e
+`terrain_soil.png`. O atlas 4×4 contém as 16 combinações dos quatro cantos;
+terreno 0 representa vazio e terreno 1 representa o material preenchido. Os
+peering bits precisam estar definidos como 0 ou 1 em todos os cantos para que
+o TileMapDual registre cada regra. Para regenerar:
 
-O comportamento do terreno é dirigido por **custom data** do TileSet, não por
-listas fixas no código:
-
-- `custom_data_layer_0` — `walkable`: se `false`, o tile bloqueia o player
-  (lido por `is_walkable()` / `is_walkable_cell()`).
-- `custom_data_layer_1` — `tillable`: se `true`, a enxada transforma o tile em
-  `SOIL` (lido por `is_tillable_cell()`).
-
-Ambas são lidas pelo helper genérico `_custom_data(tid, key, fallback)` sobre o
-tile `(3, 3)` de cada source. Sem fonte/tile/data correspondente, vale o
-`fallback`.
-
-> O **índice da camada importa**: `walkable` já é a `_0`; a `tillable` é a `_1`.
-> Inserir uma camada no meio quebraria os valores salvos — use sempre o próximo
-> índice livre.
-
-Para editar: abra o TileSet de pintura na aba **TileSet**, selecione o material
-e marque `tillable` / `walkable`. Não é preciso tocar em código.
-
-### Grama (`NONE`)
-
-A grama não tem tile próprio, então não dá para marcar `tillable` nela na
-TileSet. O valor padrão fica em `world.gd`:
-
-```gdscript
-const TILLABLE_FALLBACK := true
+```bash
+godot --headless --path . --script tools/generate_dual_tilesets.gd
 ```
 
-Ou seja, materiais sem tile (a grama) são aráveis **por padrão**. Água e
-canteiro têm `tillable = false` (flag ausente).
+O save serializa `TerrainPaint`, não os tiles calculados do atlas. Na carga, as
+camadas TileMapDual são reconstruídas a partir dos source IDs salvos.
 
-## Aração (enxada)
+## Andabilidade e aração
 
-`use_tool` usa a API pública em vez da lista hardcoded antiga:
+`terrain_at(cell)` devolve o tipo presente nas camadas de exibição;
+`is_walkable_cell()` e `is_tillable_cell()` consultam as regras de material em
+`world.gd::_custom_data()`: água bloqueia o movimento e não pode ser arada;
+terra e canteiro são andáveis e aráveis. O fallback para materiais sem tile
+(grama) é controlado por `TILLABLE_FALLBACK`.
 
-```gdscript
-func is_tillable_cell(cell: Vector2i) -> bool:
-	return _is_tillable_terrain(terrain_at(cell))
-```
-
-```gdscript
-Enums.Tool.HOE:
-	if is_tillable_cell(cell) and is_walkable_cell(cell):
-		set_terrain(cell, SOIL)
-		AudioManager.play_sfx("hoe")
-```
-
-Regras:
-
-- Grama e terra (`DIRT`) viram `SOIL`.
-- Água ou material marcado `tillable = false` não fazem nada (sem som).
-- `walkable` e `tillable` são **independentes**: um tile pode ser andável e não
-  arável (ex.: trilha batida) e vice-versa.
-- Células fora do mapa não são usadas pelas ferramentas (a checagem de
-  andabilidade barra antes).
+A enxada usa a API `set_terrain()` para trocar o terreno da célula por `SOIL`.
+Água e células fora da área caminhável não são alteradas. `walkable` e
+`tillable` são propriedades independentes no fluxo de ferramentas.
 
 ## Verificação
 
-`tools/smoke_test.gd` cobre grama arável, terra arável e enxada na água sem
-alteração. Rode:
+O smoke test cobre sincronização, aração, save/load e sistemas dependentes do
+terreno. Os testes de `tests/world/test_world_terrain.gd` também verificam que
+o TileMapDual usa mais de uma forma do atlas:
 
 ```bash
 godot --headless --path . --script tools/smoke_test.gd
+godot --headless --path . -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a tests/world/test_world_terrain.gd --ignoreHeadlessMode -c
 ```

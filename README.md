@@ -23,7 +23,7 @@ save/load.
 
 ## Sistemas
 
-- **Mundo** ([`docs/world.md`](docs/world.md)) — terreno, dual grid, `walkable`/`tillable`, aração.
+- **Mundo** ([`docs/world.md`](docs/world.md)) — terreno, autotiling com TileMapDual no editor e runtime, `walkable`/`tillable`, aração.
 - **Player** ([`docs/player.md`](docs/player.md)) — movimento, colisão de pés e skins.
 - **Fazenda** ([`docs/farming.md`](docs/farming.md)) — plantio, crescimento, colheita e árvores.
 - **Máquinas** ([`docs/machines.md`](docs/machines.md)) — aspersor, espantalho e pescador.
@@ -38,9 +38,10 @@ save/load.
 ## Estrutura (mapa de scripts)
 
 ```
-scenes/ · scripts/    game.tscn · player.gd, world.gd, dual_grid.gd,
-                      terrain_layer.gd, crop.gd, prop.gd, machine.gd,
-                      house_builder.gd, fishing.gd, decor.gd, critter.gd,
+scenes/ · scripts/    game.tscn · player.gd, world.gd, terrain_layer.gd,
+                      crop.gd, prop.gd, machine.gd, house_builder.gd,
+                      fishing.gd, decor.gd, critter.gd,
+addons/TileMapDual/    autotiling dual grid usado por TerrainWater/Dirt/Soil
                       inventory.gd, hud.gd, shop.gd, pause_menu.gd,
                       settings.gd, time_manager.gd, weather.gd, rain.gd,
                       day_night.gd, audio_manager.gd, save_game.gd

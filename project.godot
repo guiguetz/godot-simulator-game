@@ -18,13 +18,13 @@ config/icon="res://icon.png"
 
 [autoload]
 
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 GameData="*res://scripts/data/game_data.gd"
 Inventory="*res://scripts/inventory.gd"
 TimeManager="*res://scripts/time_manager.gd"
 Weather="*res://scripts/weather.gd"
 AudioManager="*res://scripts/audio_manager.gd"
 SaveGame="*res://scripts/save_game.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
@@ -36,7 +36,7 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+enabled=PackedStringArray("res://addons/TileMapDual/plugin.cfg", "res://addons/godot_ai/plugin.cfg")
 
 [gdunit4]
 
@@ -92,7 +92,6 @@ pause={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":6,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
-
 action={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)

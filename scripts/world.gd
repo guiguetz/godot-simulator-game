@@ -1,13 +1,13 @@
 @tool
 extends Node2D
 
-## Mundo: chao + dual grid (agua, trilha, canteiro) + entidades (props,
+## Mundo: chao + terreno (agua, trilha, canteiro) + entidades (props,
 ## plantacoes, maquinas) + casa. Expoe `use_tool()` para o Player e
 ## `to_dict()/from_dict()` para o SaveGame.
 ##
-## O terreno logico e PINTADO na camada Game/DualGrid/Terrain (fonte 0 = agua,
-## 1 = terra, 2 = canteiro). Em modo editor (@tool) tudo e reconstruido ao
-## vivo enquanto voce pinta.
+## O terreno e gerenciado por TileMapDual: cada tipo de terreno (Water, Dirt,
+## Soil) tem seu proprio node TileMapDual que renderiza o dual grid automaticamente.
+## A camada TerrainPaint (oculta) serve como logica para save/load.
 
 const TILE := 16
 const MAP_W := 40
@@ -18,24 +18,18 @@ const WATER := 1
 const DIRT := 2
 const SOIL := 3
 
-const SRC_TO_TERRAIN := {0: WATER, 1: DIRT, 2: SOIL}
-const TERRAIN_TO_SRC := {WATER: 0, DIRT: 1, SOIL: 2}
-
-## `NONE` (grama) nao tem tile proprio, entao nao da para marcar `tillable` na
-## TileSet; este e o valor padrao documentado para materiais sem tile.
 const TILLABLE_FALLBACK := false
 
 const TEX_GRASS := "res://assets/tiles/ground_grass.png"
-const TEX_WATER := "res://assets/tiles/terrain_water.png"
-const TEX_DIRT := "res://assets/tiles/terrain_dirt.png"
-const TEX_SOIL := "res://assets/tiles/terrain_soil.png"
 const TEX_DECORATION := preload("res://assets/graphics/tilesets/decoration.png")
 
 ## Folha decoration.png = 4x2 tiles de 16x16 (tufos, pedras, arbustos, flores).
 const DECOR_TILES := [0, 1, 2, 3, 4, 5, 6, 7]
 
-@onready var _dual_grid: DualGrid = $DualGrid
-@onready var _terrain: TileMapLayer = $DualGrid/Terrain
+@onready var _terrain_water: TileMapLayer = $TerrainWater
+@onready var _terrain_dirt: TileMapLayer = $TerrainDirt
+@onready var _terrain_soil: TileMapLayer = $TerrainSoil
+@onready var _terrain_paint: TileMapLayer = $TerrainPaint
 @onready var _entities: Node2D = $Entities
 @onready var _player: Player = $Entities/Player
 @onready var _camera: Camera2D = $Entities/Player/Camera2D
@@ -54,8 +48,6 @@ var _decor: Dictionary = {}
 func _ready() -> void:
 	add_to_group("world")
 	_rebuild_world()
-	if not _terrain.changed.is_connected(_on_terrain_changed):
-		_terrain.changed.connect(_on_terrain_changed)
 	if not Engine.is_editor_hint():
 		_build_house()
 		_setup_demo_entities()
@@ -69,11 +61,10 @@ func _ready() -> void:
 
 func _rebuild_world() -> void:
 	_clear_ground()
-	_dual_grid.setup(MAP_W, MAP_H, TILE)
 	_build_ground()
-	_dual_grid.add_terrain(WATER, load(TEX_WATER), 1)
-	_dual_grid.add_terrain(DIRT, load(TEX_DIRT), 2)
-	_dual_grid.add_terrain(SOIL, load(TEX_SOIL), 3)
+	# If TerrainPaint is empty, populate with demo map
+	if _terrain_paint.get_used_cells().size() == 0:
+		_seed_demo()
 	_refresh_from_paint()
 
 
@@ -91,22 +82,21 @@ func _process(_delta: float) -> void:
 
 
 func _paint_signature() -> int:
-	var cells := _terrain.get_used_cells()
+	var cells := _terrain_paint.get_used_cells()
 	var data := PackedInt32Array()
 	data.resize(cells.size() * 3)
 	var i := 0
 	for cell in cells:
 		data[i] = cell.x
 		data[i + 1] = cell.y
-		data[i + 2] = _terrain.get_cell_source_id(cell)
+		data[i + 2] = _terrain_paint.get_cell_source_id(cell)
 		i += 3
 	return hash(data)
 
 
 func _refresh_from_paint() -> void:
-	var masks := _terrain_masks()
-	_dual_grid.refresh_all(masks)
-	_build_walkable(masks)
+	_sync_tilemapdual_from_paint()
+	_build_walkable_from_tilemapdual()
 	_last_paint_signature = _paint_signature()
 
 
@@ -117,52 +107,50 @@ func _clear_ground() -> void:
 			child.queue_free()
 
 
-# --- Pintura -> mascaras ----------------------------------------------------
+# --- Walkable ---------------------------------------------------------------
 
-func _terrain_masks() -> Dictionary:
-	var by_src := {}
-	for cell in _terrain.get_used_cells():
-		if cell.x < 0 or cell.y < 0 or cell.x >= MAP_W or cell.y >= MAP_H:
-			continue
-		var src := _terrain.get_cell_source_id(cell)
-		if not by_src.has(src):
-			by_src[src] = _new_mask()
-		var m: PackedByteArray = by_src[src]
-		m[cell.y * MAP_W + cell.x] = 1
-		by_src[src] = m
-	var masks := {}
-	for src in by_src:
-		var tid = SRC_TO_TERRAIN.get(src)
-		if tid != null:
-			masks[tid] = by_src[src]
-	return masks
+func _sync_tilemapdual_from_paint() -> void:
+	# TerrainPaint é a fonte lógica; as camadas TileMapDual recebem terreno 1
+	# (terreno 0 representa vazio) para que o addon calcule as 16 combinações.
+	_terrain_water.clear()
+	_terrain_dirt.clear()
+	_terrain_soil.clear()
+
+	for cell in _terrain_paint.get_used_cells():
+		var src := _terrain_paint.get_cell_source_id(cell)
+		match src:
+			0: # WATER
+				_terrain_water.draw_cell(cell, 1)
+			1: # DIRT
+				_terrain_dirt.draw_cell(cell, 1)
+			2: # SOIL
+				_terrain_soil.draw_cell(cell, 1)
 
 
-func _build_walkable(masks: Dictionary) -> void:
+func _build_walkable_from_tilemapdual() -> void:
 	_walkable.resize(MAP_W * MAP_H)
 	_walkable.fill(1)
-	for tid in masks:
-		if _is_walkable_terrain(tid):
-			continue
-		var m: PackedByteArray = masks[tid]
-		for i in range(m.size()):
-			if m[i] != 0:
-				_walkable[i] = 0
+	for y in range(MAP_H):
+		for x in range(MAP_W):
+			var cell := Vector2i(x, y)
+			var tid := terrain_at(cell)
+			if tid != NONE and not _is_walkable_terrain(tid):
+				_walkable[y * MAP_W + x] = 0
 
 
 ## Le a custom data `key` do material `tid` na TileSet. Sem fonte/tile/data
 ## correspondente, retorna `fallback`.
 func _custom_data(tid: int, key: String, fallback: bool) -> bool:
-	var src = TERRAIN_TO_SRC.get(tid, -1)
-	if src < 0:
-		return fallback
-	var source := _terrain.tile_set.get_source(src) as TileSetAtlasSource
-	if source == null:
-		return fallback
-	var data := source.get_tile_data(Vector2i(3, 3), 0)
-	if data == null:
-		return fallback
-	return bool(data.get_custom_data(key))
+	# Use hardcoded values for TileMapDual
+	match tid:
+		WATER:
+			return false # Water is not walkable/tillable
+		DIRT:
+			return true # Dirt is walkable
+		SOIL:
+			return true # Soil is walkable and tillable
+		_:
+			return fallback
 
 
 func _is_walkable_terrain(tid: int) -> bool:
@@ -228,15 +216,24 @@ func _build_ground() -> void:
 func terrain_at(cell: Vector2i) -> int:
 	if cell.x < 0 or cell.y < 0 or cell.x >= MAP_W or cell.y >= MAP_H:
 		return -1
-	var src := _terrain.get_cell_source_id(cell)
-	return int(SRC_TO_TERRAIN.get(src, NONE))
+	
+	# Check each terrain layer
+	if _terrain_water.get_cell_source_id(cell) != -1:
+		return WATER
+	if _terrain_dirt.get_cell_source_id(cell) != -1:
+		return DIRT
+	if _terrain_soil.get_cell_source_id(cell) != -1:
+		return SOIL
+	return NONE
 
 
 func set_terrain(cell: Vector2i, tid: int, refresh: bool = true) -> void:
+	# Atualiza a camada lógica (também usada pelo editor e pelo save), nunca as
+	# camadas de display diretamente. Source IDs 0..2 representam WATER..SOIL.
 	if tid == NONE:
-		_terrain.erase_cell(cell)
-	elif TERRAIN_TO_SRC.has(tid):
-		_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
+		_terrain_paint.erase_cell(cell)
+	elif tid >= WATER and tid <= SOIL:
+		_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
 	if refresh:
 		_refresh_from_paint()
 
@@ -470,8 +467,11 @@ func _on_new_day(_day: int) -> void:
 
 func to_dict() -> Dictionary:
 	var terrain: Array = []
-	for cell in _terrain.get_used_cells():
-		terrain.append([cell.x, cell.y, int(SRC_TO_TERRAIN.get(_terrain.get_cell_source_id(cell), -1))])
+	# Persiste a fonte lógica para não acoplar o save aos tiles derivados.
+	for cell in _terrain_paint.get_used_cells():
+		var tid := _terrain_paint.get_cell_source_id(cell) + 1
+		if tid >= WATER and tid <= SOIL:
+			terrain.append([cell.x, cell.y, tid])
 	var props: Array = []
 	for node in _props.values():
 		props.append(node.to_dict())
@@ -508,12 +508,14 @@ func _decor_kind(cell: Vector2i) -> int:
 func from_dict(data: Dictionary) -> void:
 	_clear_entities()
 	_clear_decor()
-	_terrain.clear()
+	
+	# Restaura a camada lógica; as camadas TileMapDual são reconstruídas dela.
+	_terrain_paint.clear()
 	for t in data.get("terrain", []):
 		var cell := Vector2i(int(t[0]), int(t[1]))
 		var tid := int(t[2])
-		if TERRAIN_TO_SRC.has(tid):
-			_terrain.set_cell(cell, TERRAIN_TO_SRC[tid], Vector2i(3, 3))
+		if tid >= WATER and tid <= SOIL:
+			_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
 	_refresh_from_paint()
 
 	for p in data.get("props", []):
@@ -587,22 +589,17 @@ func _setup_camera() -> void:
 # --- Mapa de exemplo (botao do inspetor) ------------------------------------
 
 func _seed_demo() -> void:
-	if not Engine.is_editor_hint():
-		return
-	_terrain.clear()
+	_terrain_paint.clear()
 	_paint_mask(_make_water_mask(), WATER)
 	_paint_mask(_make_dirt_mask(), DIRT)
 	_paint_mask(_make_soil_mask(), SOIL)
 
 
 func _paint_mask(mask: PackedByteArray, tid: int) -> void:
-	var src = TERRAIN_TO_SRC.get(tid, -1)
-	if src < 0:
-		return
 	for y in range(MAP_H):
 		for x in range(MAP_W):
 			if mask[y * MAP_W + x] != 0:
-				_terrain.set_cell(Vector2i(x, y), src, Vector2i(3, 3))
+				set_terrain(Vector2i(x, y), tid, false)
 
 
 # --- Helpers ---------------------------------------------------------------

@@ -19,9 +19,17 @@ func _tests() -> void:
 	var save := root.get_node("SaveGame")
 	var gd := root.get_node("GameData")
 	var cell := Vector2i(20, 20)
+	var water_cell := Vector2i(10, 7)
+	# Define as células do cenário do teste para não depender do mapa pintado
+	# salvo na cena. Também valida que set_terrain alimenta TerrainPaint.
+	g.call("set_terrain", cell, 0)
+	g.call("set_terrain", water_cell, 1)
+	_check("TerrainPaint oculto em runtime", not g.get_node("TerrainPaint").visible)
+	var water_layer := g.get_node("TerrainWater") as TileMapDual
+	var water_data := water_layer.get_cell_tile_data(water_cell)
+	_check("TileMapDual usa o tile cheio do terreno", water_data != null and water_data.terrain == 1)
 	# --- tillable (issue #5) ---------------------------------------------
 	_check("grama nao e aravel", not bool(g.call("is_tillable_cell", cell)))
-	var water_cell := Vector2i(10, 7)
 	_check("agua nao e aravel", not bool(g.call("is_tillable_cell", water_cell)))
 	var water_terrain: int = g.call("terrain_at", water_cell)
 	g.call("use_tool", Enums.Tool.HOE, 0, water_cell)
