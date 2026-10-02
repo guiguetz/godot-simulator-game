@@ -29,7 +29,7 @@ que **ainda não existe** — o que queremos construir, por quê e como.
 | [011](011-hitbox-hurtbox-combate.md) | Sistema de combate com Hitbox/Hurtbox | Proposto | Média | M |
 | [012](012-mochila-expansível.md) | Mochila expansível com progressão | Proposto | Média | M |
 | [013](013-shaders-animações.md) | Shaders e animações visuais | Proposto | Alta | G |
-| [014](014-tilemapdual-migração.md) | Migração para TileMapDual | Proposto | Alta | M |
+| [014](014-tilemapdual-migração.md) | Reimplementação do terreno com TileMapDual | Em andamento | Alta | M |
 | [015](015-contorno-grid-ferramenta.md) | Contorno do grid com ferramenta selecionada | Proposto | Baixa | P |
 | [016](016-arvore-translucida-tras-jogador.md) | Árvore translúcida quando jogador está atrás | Proposto | Média | M |
 | [017](017-pintura-terreno-um-de-quatro.md) | Pintura de terreno em grupos 2×2 | Em design | Média | M |

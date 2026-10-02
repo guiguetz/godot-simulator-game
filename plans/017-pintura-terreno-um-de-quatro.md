@@ -4,7 +4,7 @@
 - **Prioridade:** Média
 - **Esforço:** M (dias)
 - **Depende de:** [#40](https://github.com/guiguetz/godot-simulator-game/issues/40)
-- **Arquivos-alvo:** `scripts/world.gd`, `scripts/terrain_layer.gd`, `scenes/game.tscn`, `assets/tiles/display_*.tres`, `tests/world/`, `docs/world.md`
+- **Arquivos-alvo:** `scripts/world.gd`, `scenes/game.tscn`, `assets/tiles/terrain_*.tres`, `tests/world/`, `docs/world.md`
 
 ## Objetivo
 
@@ -25,9 +25,9 @@ O TileMapDual passou a renderizar corretamente os quadrantes, mas a densidade re
 
 ## Design técnico
 
-- Definir a unidade do grupo 2×2 na grade lógica de `TerrainPaint` (cada unidade atual mede 16×16).
+- Definir a unidade do grupo 2×2 nas camadas lógicas `TerrainWater`, `TerrainDirt` e `TerrainSoil` (cada unidade mede 16×16).
 - Sincronizar editor e runtime pelo mesmo caminho, sem replicar uma pintura às três células vizinhas.
-- `set_terrain()` deve limpar as quatro células do grupo e então pintar a célula selecionada. No editor, a sincronização deve identificar a célula recém-pintada e aplicar a mesma regra.
+- `set_terrain()` deve limpar as quatro células do grupo em todas as camadas e então pintar a célula selecionada. No editor, identificar a camada/célula recém-pintada e aplicar a mesma regra sem espelhar uma fonte lógica obsoleta.
 - Definir normalização determinística para saves/mapas antigos que já tenham várias células pintadas no mesmo grupo, evitando escolher um vencedor por ordem não determinística do dicionário.
 - Preservar `TileMapDual` para gerar as transições; alterar a densidade da amostragem lógica, não remover as regras de autotiling.
 - Criar testes para grupo vazio, uma célula, conflito no grupo, bordas e round-trip de save/load.

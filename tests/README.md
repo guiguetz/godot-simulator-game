@@ -48,7 +48,6 @@ tests/
     test_prop.gd              # Árvore em dois golpes
     test_machine.gd           # Setup por tipo, frames
     test_critter.gd           # Parâmetros, frames, orientação, retorno
-    test_dual_grid.gd         # Setup, máscaras→tiles, 16 combinações
     test_house_builder.gd     # Casa 3x3, colisão, porta
   world/
     test_world_terrain.gd     # Terreno, andabilidade, pesca, arável
@@ -95,9 +94,8 @@ tests/
 | Prop | `unit/test_prop.gd` | Dois golpes, to_dict |
 | Machine | `unit/test_machine.gd` | Setup, frames, to_dict |
 | Critter | `unit/test_critter.gd` | Parâmetros, frames, face, retorno |
-| DualGrid | `unit/test_dual_grid.gd` | Setup, máscaras, 16 combinações |
 | HouseBuilder | `unit/test_house_builder.gd` | 3x3, colisão, porta |
-| World terreno | `world/test_world_terrain.gd` | terrain_at, set_terrain, walkable, can_fish |
+| World terreno | `world/test_world_terrain.gd` | TileMapDual, 16 regras de atlas, asset demo 32→16, exclusividade, custom data, limites, walkable, can_fish |
 | World ferramentas | `world/test_world_tools.gd` | Enxada, machado, semente, colheita |
 | World máquinas | `world/test_world_machines.gd` | place_machine, custo, validação |
 | World decoração | `world/test_world_decor.gd` | decor_place/remove |

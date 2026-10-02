@@ -35,9 +35,10 @@ API: `has_save()`, `save_game()`, `load_game()`, `delete_save()`.
 - `machines`: `Machine.to_dict()` (célula, tipo);
 - `decor`: células + índice em `GameData.DECOR`.
 
-No load, `from_dict` limpa as entidades, repinta o terreno e reconstrói o dual
-grid e a andabilidade (`_refresh_from_paint`); NPCs são ambientais e **não**
-são serializados (renascem).
+No load, `from_dict` limpa as entidades e as três camadas `TileMapDual`, repinta
+cada tipo pela API do mundo e reconstrói a andabilidade. O addon recalcula as
+transições a partir das células lógicas; NPCs são ambientais e **não** são
+serializados (renascem).
 
 ## Preferências (`GameSettings`)
 

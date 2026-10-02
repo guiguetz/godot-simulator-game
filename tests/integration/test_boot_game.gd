@@ -17,12 +17,15 @@ func test_grupos_world_e_player() -> void:
 	assert_that(get_tree().get_first_node_in_group("player")).is_not_null()
 
 
-func test_tilemapdual_e_terrainpaint_existem() -> void:
+func test_camadas_tilemapdual_sao_fonte_do_terreno() -> void:
 	var w: Node2D = boot_game()
 	assert_that(w.get_node("TerrainWater") is TileMapDual).is_true()
 	assert_that(w.get_node("TerrainDirt") is TileMapDual).is_true()
 	assert_that(w.get_node("TerrainSoil") is TileMapDual).is_true()
-	assert_that(w.get_node("TerrainPaint") is TileMapLayer).is_true()
+	assert_that(w.get_node_or_null("TerrainPaint")).is_null()
+	assert_that(w.get_node("TerrainWater").get_used_cells().is_empty()).is_false()
+	assert_that(w.get_node("TerrainDirt").get_used_cells().is_empty()).is_false()
+	assert_that(w.get_node("TerrainSoil").get_used_cells().is_empty()).is_false()
 
 
 func test_entities_e_player() -> void:

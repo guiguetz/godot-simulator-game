@@ -1,62 +1,89 @@
 # Mundo: terreno, autotiling e aração
 
-O terreno usa uma camada lógica para pintura e save/load, mais três camadas
-`TileMapDual` para exibir água, terra e canteiros. A lógica está em
-`scripts/world.gd`; os tiles de exibição ficam em `assets/tiles/display_*.tres`.
+O terreno é composto por três camadas `TileMapDual` independentes — água,
+terra e canteiros — que são a fonte de verdade para pintura, gameplay e
+save/load. A lógica pública fica em `scripts/world.gd`; os TileSets usam três
+atlas 4×4. Água e canteiro usam as imagens próprias 16×16 do jogo; terra usa o
+asset oficial `tileset_sand.png` do TileMapDual, copiado para
+`assets/tiles/terrain_dirt.png`.
 
-## Pintura e sincronização
+## Pintura e autotiling
 
-`Game/TerrainPaint` é a fonte da verdade: cada célula usa o source ID do
-`assets/tiles/terrain_paint.tres`.
+| Nó | TileSet | Tipo | Custom data (`walkable`, `tillable`) |
+|---|---|---|---|
+| `Game/TerrainWater` | `terrain_water.tres` | Água (`WATER`) | `false`, `false` |
+| `Game/TerrainDirt` | `terrain_dirt.tres` | Terra (`DIRT`) | `true`, `true` |
+| `Game/TerrainSoil` | `terrain_soil.tres` | Canteiro (`SOIL`) | `true`, `false` |
+| sem célula | — | Grama (`NONE`) | `true`, fallback de aração configurável |
 
-| Tipo | Source | Constante |
-|---|---:|---|
-| Água | 0 | `WATER` |
-| Terra | 1 | `DIRT` |
-| Canteiro | 2 | `SOIL` |
-| Grama (sem tile) | — | `NONE` |
+No editor, pinte diretamente no `TileMapDual` do material desejado, usando o
+tile marcado como terreno preenchido (`(3, 3)` nos atlas locais; `(2, 1)` no
+atlas oficial de areia). Apagar uma célula remove o material daquela camada. Ao trocar manualmente um material
+por outro no editor, apague também a célula da camada anterior para não deixar
+camadas sobrepostas. Em runtime, `world.gd::set_terrain(cell, tid)` faz essa
+substituição de forma exclusiva; o addon atualiza as transições vizinhas
+automaticamente.
 
-No editor, selecione `TerrainPaint` e pinte com a ferramenta de TileMap. O
-nó usa `scripts/terrain_layer.gd`: fica visível e semitransparente enquanto
-selecionado, e some ao selecionar outro nó para revelar o autotiling. Em
-runtime, `TerrainPaint` também fica invisível; isso não afeta `get_used_cells()`
-nem a sincronização. O `world.gd` detecta alterações na camada no editor e
-sincroniza as células com `TerrainWater`, `TerrainDirt` e `TerrainSoil`. Essas
-camadas usam o addon TileMapDual para recalcular o atlas automaticamente. Em
-runtime, `set_terrain(cell, tid)` altera `TerrainPaint` e atualiza a exibição
-pelo mesmo caminho.
+A configuração segue o padrão de múltiplas camadas dos exemplos oficiais
+[`MultipleLayers.tscn`](https://github.com/pablogila/TileMapDual/blob/main/examples/MultipleLayers.tscn)
+e [`MultipleAtlases.tscn`](https://github.com/pablogila/TileMapDual/blob/main/examples/MultipleAtlases.tscn).
+O atlas `assets/tiles/terrain_dirt.png` é uma cópia de
+[`assets/tileset_sand.png`](https://github.com/pablogila/TileMapDual/blob/main/assets/tileset_sand.png)
+do repositório oficial (snapshot consultado `b4dc775`): seus tiles têm 32×32 px e
+o nó `TerrainDirt` usa escala 0,5 para ocupar as células lógicas de 16×16 do
+jogo. A licença MIT e a origem estão registradas em
+`assets/tiles/TILEMAPDUAL-ASSETS-LICENSE.txt`.
+Água e canteiro continuam usando a arte própria do jogo.
 
-O gerador `tools/generate_dual_tilesets.gd` cria os três TileSets de display a
-partir das texturas `terrain_water.png`, `terrain_dirt.png` e
-`terrain_soil.png`. O atlas 4×4 contém as 16 combinações dos quatro cantos;
-terreno 0 representa vazio e terreno 1 representa o material preenchido. Os
-peering bits precisam estar definidos como 0 ou 1 em todos os cantos para que
-o TileMapDual registre cada regra. Para regenerar:
+O script `tools/generate_dual_tilesets.gd` gera os TileSets para as três
+texturas e configura o tamanho de atlas de cada uma (16 px nas texturas próprias,
+32 px no asset oficial usado por terra). Cada atlas 4×4 representa as combinações
+dos quatro cantos: terreno 0 é o tile vazio, terreno 1 o material preenchido, e
+os 14 tiles restantes codificam as transições. O atlas de água/canteiro segue a
+ordem canônica; para areia, o gerador reproduz a tabela explícita do exemplo
+official `MultipleLayers.tscn`: vazio em `(0, 3)` e tile cheio em `(2, 1)`. Não
+calcule as máscaras da areia a partir da coordenada do atlas. Na inicialização,
+células já salvas são reaplicadas via `draw_cell()` para adotar o tile cheio
+correto. Todos os quatro peering bits são definidos com 0 ou 1. O tile lógico
+preenchido também carrega os custom data `walkable` e `tillable`,
+consultados pelo gameplay — não há um mapa lógico oculto nem uma cópia paralela
+do terreno.
+
+Para regenerar os recursos no editor Godot (importação inicial necessária após
+clonar o projeto):
 
 ```bash
+godot --headless --editor --path . --import
 godot --headless --path . --script tools/generate_dual_tilesets.gd
 ```
 
-O save serializa `TerrainPaint`, não os tiles calculados do atlas. Na carga, as
-camadas TileMapDual são reconstruídas a partir dos source IDs salvos.
+## API, andabilidade e aração
 
-## Andabilidade e aração
+- `terrain_at(cell)` devolve `WATER`, `DIRT`, `SOIL`, `NONE` (grama) ou `-1`
+  para coordenadas fora do mapa.
+- `set_terrain(cell, tid)` apaga a célula em todas as camadas e, se o tipo não
+  for `NONE`, pinta o tile preenchido na camada correta. A apresentação dual
+  fica a cargo do TileMapDual.
+- `is_walkable_cell()` e `is_tillable_cell()` consultam os custom data do tile
+  lógico correspondente. Água bloqueia o movimento; terra e canteiro são
+  andáveis; somente terra pode ser arada para canteiro. Células sem tile usam
+  o fallback de grama.
+- Ferramentas, pesca, máquinas e NPCs consultam a mesma API do mundo, nunca os
+  tiles visuais derivados do atlas.
 
-`terrain_at(cell)` devolve o tipo presente nas camadas de exibição;
-`is_walkable_cell()` e `is_tillable_cell()` consultam as regras de material em
-`world.gd::_custom_data()`: água bloqueia o movimento e não pode ser arada;
-terra e canteiro são andáveis e aráveis. O fallback para materiais sem tile
-(grama) é controlado por `TILLABLE_FALLBACK`.
+## Save/load
 
-A enxada usa a API `set_terrain()` para trocar o terreno da célula por `SOIL`.
-Água e células fora da área caminhável não são alteradas. `walkable` e
-`tillable` são propriedades independentes no fluxo de ferramentas.
+O save guarda registros `[x, y, tipo]` das células ocupadas nas camadas
+TileMapDual. Não persiste os tiles de apresentação escolhidos pelo addon; na
+carga, cada tipo é repintado pela API e o TileMapDual recalcula as bordas.
+O formato mantém os IDs de terreno já usados pelo save: 1 água, 2 terra e
+3 canteiro.
 
 ## Verificação
 
-O smoke test cobre sincronização, aração, save/load e sistemas dependentes do
-terreno. Os testes de `tests/world/test_world_terrain.gd` também verificam que
-o TileMapDual usa mais de uma forma do atlas:
+Os testes cobrem as 16 regras do atlas, uso do asset oficial de areia na escala
+correta, camadas exclusivas, custom data, andabilidade/aração, bordas do mapa e
+round-trip do save. Execute:
 
 ```bash
 godot --headless --path . --script tools/smoke_test.gd
