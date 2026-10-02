@@ -5,9 +5,8 @@ extends Node2D
 ## plantacoes, maquinas) + casa. Expoe `use_tool()` para o Player e
 ## `to_dict()/from_dict()` para o SaveGame.
 ##
-## O terreno e gerenciado por TileMapDual: cada tipo de terreno (Water, Dirt,
-## Soil) tem seu proprio node TileMapDual que renderiza o dual grid automaticamente.
-## A camada TerrainPaint (oculta) serve como logica para save/load.
+## Cada TileMapDual e uma camada de terreno independente e tambem a fonte de
+## verdade para pintura, consultas e save/load. O addon gera apenas a apresentacao.
 
 const TILE := 16
 const MAP_W := 40
@@ -26,16 +25,15 @@ const TEX_DECORATION := preload("res://assets/graphics/tilesets/decoration.png")
 ## Folha decoration.png = 4x2 tiles de 16x16 (tufos, pedras, arbustos, flores).
 const DECOR_TILES := [0, 1, 2, 3, 4, 5, 6, 7]
 
-@onready var _terrain_water: TileMapLayer = $TerrainWater
-@onready var _terrain_dirt: TileMapLayer = $TerrainDirt
-@onready var _terrain_soil: TileMapLayer = $TerrainSoil
-@onready var _terrain_paint: TileMapLayer = $TerrainPaint
+@onready var _terrain_water: TileMapDual = $TerrainWater
+@onready var _terrain_dirt: TileMapDual = $TerrainDirt
+@onready var _terrain_soil: TileMapDual = $TerrainSoil
+@onready var _terrain_layers: Array[TileMapDual] = [_terrain_water, _terrain_dirt, _terrain_soil]
 @onready var _entities: Node2D = $Entities
 @onready var _player: Player = $Entities/Player
 @onready var _camera: Camera2D = $Entities/Player/Camera2D
 
 var _walkable := PackedByteArray()
-var _last_paint_signature := 0
 
 var _props: Dictionary = {}
 var _crops: Dictionary = {}
@@ -62,42 +60,46 @@ func _ready() -> void:
 func _rebuild_world() -> void:
 	_clear_ground()
 	_build_ground()
-	# If TerrainPaint is empty, populate with demo map
-	if _terrain_paint.get_used_cells().size() == 0:
+	if _all_terrain_layers_empty():
 		_seed_demo()
-	_refresh_from_paint()
+	_normalize_terrain_layers()
+	_rebuild_walkable()
 
 
-func _on_terrain_changed() -> void:
-	_refresh_from_paint()
+func _all_terrain_layers_empty() -> bool:
+	for layer in _terrain_layers:
+		if not layer.get_used_cells().is_empty():
+			return false
+	return true
 
 
-func _process(_delta: float) -> void:
-	if not Engine.is_editor_hint():
-		return
-	var signature := _paint_signature()
-	if signature != _last_paint_signature:
-		_last_paint_signature = signature
-		_refresh_from_paint()
+## Resolve sobreposicoes deixadas por pintura manual em mais de uma camada.
+## A prioridade fixa (agua, terra, canteiro) tambem e a ordem de consulta.
+func _normalize_terrain_layers() -> void:
+	var occupied: Dictionary = {}
+	for tid in [WATER, DIRT, SOIL]:
+		var layer := _layer_for_terrain(tid)
+		for cell in layer.get_used_cells():
+			# Reaplica o terreno cheio pela API do addon. Isso migra células
+			# salvas com coordenadas antigas do atlas (ex.: areia oficial).
+			var tile_data := layer.get_cell_tile_data(cell)
+			if tile_data == null or tile_data.terrain != 1:
+				layer.draw_cell(cell, 1)
+			if occupied.has(cell):
+				layer.erase_cell(cell)
+			else:
+				occupied[cell] = tid
 
 
-func _paint_signature() -> int:
-	var cells := _terrain_paint.get_used_cells()
-	var data := PackedInt32Array()
-	data.resize(cells.size() * 3)
-	var i := 0
-	for cell in cells:
-		data[i] = cell.x
-		data[i + 1] = cell.y
-		data[i + 2] = _terrain_paint.get_cell_source_id(cell)
-		i += 3
-	return hash(data)
-
-
-func _refresh_from_paint() -> void:
-	_sync_tilemapdual_from_paint()
-	_build_walkable_from_tilemapdual()
-	_last_paint_signature = _paint_signature()
+func _rebuild_walkable() -> void:
+	_walkable.resize(MAP_W * MAP_H)
+	_walkable.fill(1)
+	for y in range(MAP_H):
+		for x in range(MAP_W):
+			var cell := Vector2i(x, y)
+			var tid := terrain_at(cell)
+			if tid != NONE and not _is_walkable_terrain(cell, tid):
+				_walkable[y * MAP_W + x] = 0
 
 
 func _clear_ground() -> void:
@@ -109,61 +111,31 @@ func _clear_ground() -> void:
 
 # --- Walkable ---------------------------------------------------------------
 
-func _sync_tilemapdual_from_paint() -> void:
-	# TerrainPaint é a fonte lógica; as camadas TileMapDual recebem terreno 1
-	# (terreno 0 representa vazio) para que o addon calcule as 16 combinações.
-	_terrain_water.clear()
-	_terrain_dirt.clear()
-	_terrain_soil.clear()
-
-	for cell in _terrain_paint.get_used_cells():
-		var src := _terrain_paint.get_cell_source_id(cell)
-		match src:
-			0: # WATER
-				_terrain_water.draw_cell(cell, 1)
-			1: # DIRT
-				_terrain_dirt.draw_cell(cell, 1)
-			2: # SOIL
-				_terrain_soil.draw_cell(cell, 1)
+## Le os metadados do tile logico ocupando a celula. O tile preenchido (3,3)
+## de cada TileSet carrega os dados de jogo; tiles de display nao sao consultados.
+func _custom_data(cell: Vector2i, key: String, fallback: bool) -> bool:
+	var tid := terrain_at(cell)
+	var layer := _layer_for_terrain(tid)
+	if layer == null:
+		return fallback
+	var tile_data := layer.get_cell_tile_data(cell)
+	if tile_data == null:
+		return fallback
+	var value: Variant = tile_data.get_custom_data(key)
+	return bool(value) if value != null else fallback
 
 
-func _build_walkable_from_tilemapdual() -> void:
-	_walkable.resize(MAP_W * MAP_H)
-	_walkable.fill(1)
-	for y in range(MAP_H):
-		for x in range(MAP_W):
-			var cell := Vector2i(x, y)
-			var tid := terrain_at(cell)
-			if tid != NONE and not _is_walkable_terrain(tid):
-				_walkable[y * MAP_W + x] = 0
+func _is_walkable_terrain(cell: Vector2i, _tid: int) -> bool:
+	return _custom_data(cell, "walkable", true)
 
 
-## Le a custom data `key` do material `tid` na TileSet. Sem fonte/tile/data
-## correspondente, retorna `fallback`.
-func _custom_data(tid: int, key: String, fallback: bool) -> bool:
-	# Use hardcoded values for TileMapDual
-	match tid:
-		WATER:
-			return false # Water is not walkable/tillable
-		DIRT:
-			return true # Dirt is walkable
-		SOIL:
-			return true # Soil is walkable and tillable
-		_:
-			return fallback
+func _is_tillable_terrain(cell: Vector2i, _tid: int) -> bool:
+	return _custom_data(cell, "tillable", TILLABLE_FALLBACK)
 
 
-func _is_walkable_terrain(tid: int) -> bool:
-	return _custom_data(tid, "walkable", true)
-
-
-func _is_tillable_terrain(tid: int) -> bool:
-	return _custom_data(tid, "tillable", TILLABLE_FALLBACK)
-
-
-## Indica se a enxada pode transformar a celula em `SOIL` (dados do TileSet).
+## Indica se a enxada pode transformar a celula em `SOIL` (custom data do tile).
 func is_tillable_cell(cell: Vector2i) -> bool:
-	return _is_tillable_terrain(terrain_at(cell))
+	return _is_tillable_terrain(cell, terrain_at(cell))
 
 
 func is_walkable(world_pos: Vector2) -> bool:
@@ -214,28 +186,36 @@ func _build_ground() -> void:
 # --- Terreno publico -------------------------------------------------------
 
 func terrain_at(cell: Vector2i) -> int:
-	if cell.x < 0 or cell.y < 0 or cell.x >= MAP_W or cell.y >= MAP_H:
+	if not _is_inside_map(cell):
 		return -1
-	
-	# Check each terrain layer
-	if _terrain_water.get_cell_source_id(cell) != -1:
-		return WATER
-	if _terrain_dirt.get_cell_source_id(cell) != -1:
-		return DIRT
-	if _terrain_soil.get_cell_source_id(cell) != -1:
-		return SOIL
+	for tid in [WATER, DIRT, SOIL]:
+		var layer := _layer_for_terrain(tid)
+		if layer.get_cell_source_id(cell) != -1:
+			return tid
 	return NONE
 
 
 func set_terrain(cell: Vector2i, tid: int, refresh: bool = true) -> void:
-	# Atualiza a camada lógica (também usada pelo editor e pelo save), nunca as
-	# camadas de display diretamente. Source IDs 0..2 representam WATER..SOIL.
-	if tid == NONE:
-		_terrain_paint.erase_cell(cell)
-	elif tid >= WATER and tid <= SOIL:
-		_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
+	if not _is_inside_map(cell) or tid < NONE or tid > SOIL:
+		return
+	for layer in _terrain_layers:
+		layer.erase_cell(cell)
+	if tid != NONE:
+		_layer_for_terrain(tid).draw_cell(cell, 1)
 	if refresh:
-		_refresh_from_paint()
+		_rebuild_walkable()
+
+
+func _is_inside_map(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < MAP_W and cell.y < MAP_H
+
+
+func _layer_for_terrain(tid: int) -> TileMapDual:
+	match tid:
+		WATER: return _terrain_water
+		DIRT: return _terrain_dirt
+		SOIL: return _terrain_soil
+		_: return null
 
 
 func has_crop(cell: Vector2i) -> bool:
@@ -467,10 +447,10 @@ func _on_new_day(_day: int) -> void:
 
 func to_dict() -> Dictionary:
 	var terrain: Array = []
-	# Persiste a fonte lógica para não acoplar o save aos tiles derivados.
-	for cell in _terrain_paint.get_used_cells():
-		var tid := _terrain_paint.get_cell_source_id(cell) + 1
-		if tid >= WATER and tid <= SOIL:
+	# Cada TileMapDual e fonte logica e visual da propria camada; serializamos
+	# apenas a ocupacao/tipo, nunca os tiles derivados escolhidos pelo addon.
+	for tid in [WATER, DIRT, SOIL]:
+		for cell in _layer_for_terrain(tid).get_used_cells():
 			terrain.append([cell.x, cell.y, tid])
 	var props: Array = []
 	for node in _props.values():
@@ -509,14 +489,16 @@ func from_dict(data: Dictionary) -> void:
 	_clear_entities()
 	_clear_decor()
 	
-	# Restaura a camada lógica; as camadas TileMapDual são reconstruídas dela.
-	_terrain_paint.clear()
+	# Restaura as celulas logicas; TileMapDual recalcula a apresentacao.
+	for layer in _terrain_layers:
+		layer.clear()
 	for t in data.get("terrain", []):
+		if t.size() < 3:
+			continue
 		var cell := Vector2i(int(t[0]), int(t[1]))
 		var tid := int(t[2])
-		if tid >= WATER and tid <= SOIL:
-			_terrain_paint.set_cell(cell, tid - 1, Vector2i(3, 3))
-	_refresh_from_paint()
+		set_terrain(cell, tid, false)
+	_rebuild_walkable()
 
 	for p in data.get("props", []):
 		var cell := Vector2i(int(p["cell"][0]), int(p["cell"][1]))
@@ -589,10 +571,12 @@ func _setup_camera() -> void:
 # --- Mapa de exemplo (botao do inspetor) ------------------------------------
 
 func _seed_demo() -> void:
-	_terrain_paint.clear()
+	for layer in _terrain_layers:
+		layer.clear()
 	_paint_mask(_make_water_mask(), WATER)
 	_paint_mask(_make_dirt_mask(), DIRT)
 	_paint_mask(_make_soil_mask(), SOIL)
+	_rebuild_walkable()
 
 
 func _paint_mask(mask: PackedByteArray, tid: int) -> void:

@@ -1,180 +1,72 @@
-# 014 — Migração para TileMapDual
+# 014 — Reimplementação do terreno com TileMapDual
 
-- **Status:** Proposto
+- **Status:** Em andamento
 - **Prioridade:** Alta
 - **Esforço:** M (dias)
 - **Depende de:** —
-- **Arquivos-alvo:** `scripts/dual_grid.gd` (remove), `scripts/terrain_layer.gd` (remove), `scripts/world.gd`, `scenes/game.tscn`, `docs/world.md`
+- **Arquivos-alvo:** `scenes/game.tscn`, `scripts/world.gd`, `assets/tiles/`, `tests/world/`, `docs/world.md`, `README.md`
 
 ## Objetivo
 
-Substituir a implementação homebrew de dual grid (342 + 46 linhas) pelo addon
-[TileMapDual](https://github.com/pablogila/TileMapDual), reduzindo código
-próprio e ganhando suporte nativo a dual grid no editor.
+Reimplementar do zero a integração do dual grid no jogo a partir do contrato e dos exemplos oficiais do TileMapDual v5, mantendo os comportamentos de terreno já usados pelos sistemas do jogo.
 
 ## Motivação / Contexto
 
-O projeto tem um dual grid funcional implementado em `dual_grid.gd` (342 linhas,
-@tool com overlay de editor, bitmask 4x4, legenda) e `terrain_layer.gd` (46
-linhas, camada de pintura). Funciona, mas:
+A integração existente mistura regras de terreno, pintura, tilesets e atualização visual, e não segue de forma confiável o fluxo documentado pelo addon. Esta implementação será feita em um worktree limpo a partir do `main`, sem reaproveitar as alterações locais em andamento nem a arquitetura anterior como requisito.
 
-- **Código próprio** que precisa de manutenção.
-- **Sem suporte nativo** no editor — o overlay é desenhado via `_draw()`.
-- **Limitações** — não suporta isometria, hex, nem auto-tiling avançado.
-- TileMapDual é um addon maduro (v5), com suporte a todos os tipos de grid,
-  preview em tempo real no editor, e apenas 15 tiles necessários (vs 16 atuais).
+Referências primárias:
 
-O trade-off é depender de um addon de terceiro, mas o projeto é ativo (v5
-recente) e o código é MIT.
+- [TileMapDual — README e documentação](https://github.com/pablogila/TileMapDual)
+- [Exemplos oficiais](https://github.com/pablogila/TileMapDual/tree/main/examples), especialmente `MultipleLayers.tscn`, `MultipleAtlases.tscn` e `AllShapes.tscn`.
+- [Assets oficiais](https://github.com/pablogila/TileMapDual/tree/main/assets), como referência de layout dos tilesets, tiles lógicos e tiles de exibição; usar somente os recursos necessários e preservar a licença MIT/atribuição.
+
+A implementação copia e usa o asset oficial `assets/tileset_sand.png` como atlas de terra, conforme solicitado. Como seus tiles medem 32×32 e o grid do jogo mede 16×16, o TileMapDual de terra é escalado em 0,5. Água e canteiro mantêm as texturas próprias; a licença MIT e a atribuição do arquivo copiado ficam em `assets/tiles/TILEMAPDUAL-ASSETS-LICENSE.txt`.
+
+## Comportamento esperado
+
+- Terreno quadrado de 16×16 com transições de dual grid corretas em runtime e no editor.
+- Água, terra e canteiro permanecem terrenos distintos, sem mistura acidental entre tipos.
+- Pintura e remoção de células atualizam as bordas vizinhas em todas as camadas afetadas.
+- A consulta de terreno, andabilidade, aração, save/load e sistemas dependentes continuam usando uma única API de mundo, sem depender da representação visual do atlas.
+- Cada camada TileMapDual mantém as células lógicas e usa o atlas 4×4 do próprio material para gerar suas camadas de exibição; os dados `walkable`/`tillable` vivem no tile lógico preenchido.
 
 ## Design técnico
 
-### Arquitetura atual → nova
-
-| Atual | Novo (TileMapDual) |
-|---|---|
-| `terrain_layer.gd` (TileMapLayer de pintura) | Removido — TileMapDual já é a camada de pintura |
-| `dual_grid.gd` (renderização dual grid) | Removido — TileMapDual renderiza automaticamente |
-| `world.gd` (lógica do mundo) | Adaptado para ler/escrever no TileMapDual |
-
-### Estrutura de nodes
-
-**Atual:**
-```
-Game/DualGrid (DualGrid @tool)
-  └── Terrain (TileMapLayer) ← camada de pintura
-```
-
-**Novo:**
-```
-Game/TerrainWater (TileMapDual)   ← tiles de água
-Game/TerrainDirt (TileMapDual)    ← tiles de terra
-Game/TerrainSoil (TileMapDual)    ← tiles de canteiro
-Game/TerrainPaint (TileMapLayer)  ← camada lógica oculta (para save/compatibilidade)
-```
-
-TileMapDual não suporta múltiplos terrenos num mesmo node — cada tipo de
-terreno é um TileMapDual separado, conforme a documentação do addon.
-
-### Migração de terreno
-
-O sistema atual usa source IDs num único TileMapLayer:
-- Source 0 = WATER, Source 1 = DIRT, Source 2 = SOIL
-
-Com TileMapDual, cada terreno é um node separado. `world.gd` precisa adaptar:
-
-```gdscript
-# Antes (source-based)
-func terrain_at(cell: Vector2i) -> int:
-    var src := _terrain.get_cell_source_id(cell)
-    return SRC_TO_TERRAIN.get(src, NONE)
-
-# Depois (layer-based)
-func terrain_at(cell: Vector2i) -> int:
-    if _terrain_water.get_cell_source_id(cell) != -1:
-        return WATER
-    if _terrain_dirt.get_cell_source_id(cell) != -1:
-        return DIRT
-    if _terrain_soil.get_cell_source_id(cell) != -1:
-        return SOIL
-    return NONE
-```
-
-### Custom data (walkable/tillable)
-
-O sistema atual lê `custom_data` do TileSet de pintura. Com TileMapDual,
-temos duas opções:
-
-1. **Manter custom data no TileSet de pintura** — TileMapDual usa um TileSet
-   de "display tiles", mas podemos manter o TileSet original como referência
-   para lógica.
-2. **Mover para constantes em world.gd** — mais simples, menos flexível.
-
-**Recomendação:** manter custom data no TileSet de pintura (que vira o
-"world tiles" do TileMapDual) e ler como antes via `_custom_data()`.
-
-### Save/load
-
-O save atual salva o estado do `_terrain` (TileMapLayer de pintura). Com
-TileMapDual, precisamos salvar a camada lógica (paint) em vez da visual.
-Duas opções:
-
-1. **Manter um TileMapLayer oculto** como camada lógica — o TileMapDual lê
-   dele para renderizar. Save lê/escreve nele.
-2. **Salvar diretamente os cells do TileMapDual** — mais simples, mas
-   acopla save ao addon.
-
-**Recomendação:** opção 1 — manter `TerrainPaint` como camada lógica
-oculta. TileMapDual lê dele. Save continua usando a mesma API.
-
-### Editor workflow
-
-Hoje o designer pinta no `Terrain` (TileMapLayer) e vê o dual grid em
-tempo real via `@tool` no `DualGrid`. Com TileMapDual, o designer pinta
-direto no `TileMapDual` e vê o resultado imediatamente — sem overlay
-customizado. Melhor UX.
+- Recomeçar a integração em branch/worktree limpo e primeiro validar a API real do addon v5 presente no projeto contra `MultipleLayers.tscn`, `MultipleAtlases.tscn` e `AllShapes.tscn` do upstream.
+- Usar um `TileMapDual` por tipo de terreno, seguindo `MultipleLayers.tscn`. Cada node é o mapa lógico pintável; o addon deriva os tiles de exibição do TileSet e dos vizinhos, sem sincronizar com outro mapa.
+- Definir uma única fonte de verdade serializável para o terreno. `world.gd` traduz a API de alto nível (`terrain_at`, `set_terrain`, andabilidade/aração) para os mapas lógicos e reconstrói a apresentação após carregar save.
+- Configurar os TileSets com o terreno vazio/preenchido e peering bits segundo os exemplos oficiais. A areia usa sua tabela explícita de 16 masks (vazio `(0,3)`, cheio `(2,1)`), tile size 32 e escala 0,5; normalizar células da cena gravadas com o atlas anterior via `draw_cell()`.
+- Armazenar `walkable` e `tillable` como custom data no tile lógico cheio do TileSet de cada material. Os dados são lidos da célula do `TileMapDual`, nunca da camada de exibição interna.
+- Manter a ordenação visual compatível com chão, entidades, player e água; validar as bordas do mapa e células apagadas.
+- Não remover código/recursos até mapear consumidores, formatos de save e testes existentes; a implementação final, porém, não deve preservar caminhos antigos apenas por inércia.
 
 ## Escopo
 
-- **Incluído:** instalação do TileMapDual, remoção de dual_grid.gd e
-  terrain_layer.gd, adaptação de world.gd, migração do TileSet,
-  atualização da cena game.tscn, documentação.
-- **Fora do escopo:** suporte a isometria/hex (futuro), tiles de decoração
-  (já funcionam separadamente), refatoração de farming.
+- **Incluído:** refazer configuração de TileMapDual e TileSets; integrar o atlas oficial `tileset_sand.png` para terra com escala compatível; reestruturar nós e sincronização do terreno; preservar gameplay/save; adaptar testes; atualizar docs e atribuição/licença.
+- **Fora do escopo:** trocar a direção artística do jogo, migrar para grid isométrico/hexagonal, reescrever farming ou atualizar o addon além do que for necessário à integração.
 
 ## Tarefas
 
-### Fase 1 — Instalação e setup
-- [ ] Instalar TileMapDual v5 como addon (`addons/TileMapDual/`)
-- [ ] Habilitar plugin no Project Settings
-- [ ] Criar TileSet de display tiles (15 tiles para cada terreno)
-- [ ] Criar 3 nodes TileMapDual na cena (Water, Dirt, Soil)
-- [ ] Configurar cada um com seu TileSet e shape
-
-### Fase 2 — Migração da lógica
-- [ ] Adaptar `terrain_at()` para ler de múltiplos TileMapDual
-- [ ] Adaptar `set_terrain()` para escrever no TileMapDual correto
-- [ ] Manter custom data (walkable/tillable) no TileSet de pintura
-- [ ] Manter camada `TerrainPaint` oculta para save/load
-- [ ] Adaptar `_rebuild_world()` para setup do TileMapDual
-- [ ] Remover referências a `DualGrid` e `terrain_layer` em world.gd
-
-### Fase 3 — Migração da cena
-- [ ] Atualizar `game.tscn`: remover DualGrid, adicionar TileMapDual nodes
-- [ ] Remover `dual_grid.gd` e `terrain_layer.gd`
-- [ ] Testar pintura no editor (preview em tempo real)
-- [ ] Testar farming (enxada, plantio, colheita)
-- [ ] Testar save/load com a nova estrutura
-
-### Fase 4 — Validação
-- [ ] Smoke test passa com a nova estrutura
-- [ ] gdUnit4 passa (testes de terreno adaptados)
-- [ ] Performance: dual grid não é mais lento que antes
-- [ ] Documentar em `docs/world.md` (nova estrutura de nodes)
+- [x] Revisar a API v5 e validar o fluxo de múltiplas camadas com os exemplos oficiais; copiar e usar o atlas oficial de areia para terra.
+- [x] Gerar e validar um TileSet por material, incluindo os 16 peering bits oficiais da areia, custom data e tile sizes compatíveis com a grade.
+- [x] Refazer a cena de jogo e a API interna de leitura/escrita do terreno sem camada de sincronização paralela.
+- [x] Preservar terreno inicial, ferramentas, andabilidade, aração e save/load.
+- [x] Adaptar testes de terreno para os 16 peering bits da areia, migração das células iniciais, exclusividade, custom data, remoção e limites.
+- [x] Atualizar `docs/world.md`, documentação de save/load e `README.md` com o fluxo e comandos.
+- [x] Rodar gdUnit4, smoke test e checkup completo com smoke test.
 
 ## Critérios de aceite
 
-- [ ] TileMapDual renderiza o dual grid corretamente no editor e em runtime.
-- [ ] Pintar terreno no editor mostra preview instantâneo.
-- [ ] Enxada transforma grama em canteiro (SOIL) corretamente.
-- [ ] Walkable/tillable funcionam como antes.
-- [ ] Save/load preserva o estado do terreno.
-- [ ] Smoke test passa.
-- [ ] `dual_grid.gd` e `terrain_layer.gd` foram removidos.
+- [x] A cena do jogo gera camadas de exibição TileMapDual e usa o atlas demo oficial copiado para renderizar terra alinhada ao grid 16×16.
+- [x] No jogo, as transições de água, terra e canteiro são corretas ao pintar, apagar, aração e carregar save.
+- [x] `terrain_at`, `is_walkable_cell`, `is_tillable_cell` e a serialização não dependem dos tiles visuais gerados.
+- [x] Testes de terreno, todos os testes gdUnit4 e smoke test passam.
+- [x] A documentação e a licença/atribuição acompanham o asset de demonstração copiado e usado.
 
 ## Riscos / Notas
 
-- **Breaking change:** remover `DualGrid` afeta todo mundo que referencia
-  o node (world.gd, possivelmente save). Mitigar: mapear todas as
-  referências antes de remover.
-- **Múltiplos terrenos:** TileMapDual recomenda um node por terreno. Com
-  3 terrenos + grama, são 3-4 nodes. Pode ficar verboso mas é o padrão
-  do addon.
-- **Compatibilidade de save:** saves antigos usam o formato do terrain
-  antigo. Mitigar: manter `TerrainPaint` como camada lógica e migrar
-  saves na primeira carga.
-- **Dependência de terceiro:** TileMapDual é MIT e ativo, mas pode ter
-  bugs. Mitigar: manter `dual_grid.gd` como backup por 1-2 semanas
-  antes de deletar.
-- **Tiles de decoração:** o sistema atual de decoração (arbustos, pedras)
-  é independente do dual grid e deve continuar funcionando.
+- TileMapDual v5 foi reescrito e seu comportamento difere de versões anteriores; validar com as cenas oficiais e não inferir a API pelos dados da versão antiga.
+- A atualização visual pode ser assíncrona/deferred; testes devem aguardar o frame/sinal apropriado em vez de depender de sincronismo não garantido.
+- Múltiplas camadas de material podem se sobrepor; definir ordem e política de exclusividade em um único ponto e testar transições.
+- O asset upstream `tileset_sand.png` é redistribuído sob MIT; manter a licença e atribuição junto dos assets copiados.
+- O worktree original tem alterações não commitadas do usuário; não copiá-las, apagá-las ou alterá-las durante esta tarefa.

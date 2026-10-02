@@ -95,7 +95,6 @@ tests/
     test_prop.gd
     test_machine.gd
     test_critter.gd
-    test_dual_grid.gd
     test_house_builder.gd
   world/                         # world.gd quebrado por responsabilidade
     test_world_terrain.gd        # terreno, andabilidade, can_fish
@@ -193,7 +192,7 @@ Convenções:
 | Prop | `unit/test_prop.gd` | 1º `chop` vira toco (+2 madeira); 2º remove (+1); `to_dict` |
 | Machine | `unit/test_machine.gd` | `setup` por tipo; `_frames_for`/offsets; `to_dict` |
 | Critter | `unit/test_critter.gd` | parâmetros por tipo; frames por tipo (incl. `ROWS_BLOB`); `_face`; volta pra casa quando longe |
-| DualGrid | `unit/test_dual_grid.gd` | `setup`/`add_terrain`; 16 tiles no atlas; offset `-tile/2`; `_bits_of` (16 combinações); OOB = false; `refresh_all`/`clear_all` |
+| TileMapDual | `world/test_world_terrain.gd` | Regras do atlas (16 combinações), camadas exclusivas, custom data, bordas e round-trip do terreno |
 | HouseBuilder | `unit/test_house_builder.gd` | cria `HouseWalls`+`HouseRoof`; 3x3; porta sem colisão; paredes com physics layer; z 5/20 |
 | World terreno | `world/test_world_terrain.gd` | `terrain_at`/`set_terrain`; `is_walkable(_cell)` água/bloqueio; `can_fish`/`_near_water`; `mouse_cell` |
 | World ferramentas | `world/test_world_tools.gd` | enxada em grama/terra→SOIL e rejeita água; regador molha crop; machado em árvore/toco; semente só em SOIL, consome e não empilha; colheita com recompensa; sem semente não planta |
@@ -253,7 +252,7 @@ que a suíte equivalente passar, o smoke test pode ser simplificado ou removido
 - [x] Implementar `unit/` de autoloads (Inventory, TimeManager, Weather,
       Settings).
 - [x] Implementar `unit/` de entidades (Crop, Prop, Machine, Critter).
-- [x] Implementar `unit/` de render/estruturas (DualGrid, HouseBuilder).
+- [x] Implementar `unit/` de render/estruturas (DualGrid homebrew, depois substituído por cobertura de integração do TileMapDual; HouseBuilder).
 - [x] Implementar `world/` (terreno, ferramentas, máquinas, decoração, dia,
       serialização, player).
 - [x] Implementar `ui/` (Fishing, Decor, HUD, Shop, PauseMenu, Rain, DayNight,

@@ -125,6 +125,6 @@ func boot_game() -> Variant:
 	# Tests assert against the procedural demo map. Do not depend on cells saved
 	# in game.tscn by editor sessions; regenerate the fixture for every test.
 	world.call("_seed_demo")
-	world.call("_refresh_from_paint")
+	world.call("_rebuild_walkable")
 	await_idle_frame()
 	return world

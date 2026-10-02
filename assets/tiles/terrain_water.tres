@@ -1,9 +1,9 @@
-[gd_resource type="TileSet" format=3 uid="uid://jex38ibpu2gv"]
+[gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" uid="uid://bslt61jb3xfrx" path="res://assets/tiles/terrain_water.png" id="1_pprhw"]
+[ext_resource type="Texture2D" path="res://assets/tiles/terrain_water.png" id="1_8f3v5"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhmki"]
-texture = ExtResource("1_pprhw")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vddwi"]
+texture = ExtResource("1_8f3v5")
 0:0/0 = 0
 0:0/0/terrain_set = 0
 0:0/0/terrain = 0
@@ -109,4 +109,8 @@ terrain_set_0/terrain_0/name = "empty"
 terrain_set_0/terrain_0/color = Color(0.25, 0.25, 0.25, 1)
 terrain_set_0/terrain_1/name = "water"
 terrain_set_0/terrain_1/color = Color(1, 1, 1, 1)
-sources/0 = SubResource("TileSetAtlasSource_mhmki")
+custom_data_layer_0/name = "walkable"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "tillable"
+custom_data_layer_1/type = 1
+sources/0 = SubResource("TileSetAtlasSource_vddwi")

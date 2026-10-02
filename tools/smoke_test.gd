@@ -10,6 +10,8 @@ func _process(_delta: float) -> bool:
 	_step += 1
 	if _step == 3:
 		_tests()
+	if _step == 4:
+		_check_dual_grid_rendering()
 		quit()
 	return false
 func _tests() -> void:
@@ -20,14 +22,26 @@ func _tests() -> void:
 	var gd := root.get_node("GameData")
 	var cell := Vector2i(20, 20)
 	var water_cell := Vector2i(10, 7)
-	# Define as células do cenário do teste para não depender do mapa pintado
-	# salvo na cena. Também valida que set_terrain alimenta TerrainPaint.
+	# Define células do cenário de teste via API pública; os próprios
+	# TileMapDual são a fonte lógica e recalculam sua apresentação.
 	g.call("set_terrain", cell, 0)
 	g.call("set_terrain", water_cell, 1)
-	_check("TerrainPaint oculto em runtime", not g.get_node("TerrainPaint").visible)
+	_check("nao existe camada TerrainPaint paralela", g.get_node_or_null("TerrainPaint") == null)
 	var water_layer := g.get_node("TerrainWater") as TileMapDual
 	var water_data := water_layer.get_cell_tile_data(water_cell)
-	_check("TileMapDual usa o tile cheio do terreno", water_data != null and water_data.terrain == 1)
+	_check("TileMapDual armazena o tile logico cheio", water_data != null and water_data.terrain == 1)
+	_check("custom data bloqueia agua", water_data != null and not bool(water_data.get_custom_data("walkable")))
+	_check("TileMapDual cria camada de display", water_layer.get_child_count() > 0)
+	var dirt_layer := g.get_node("TerrainDirt") as TileMapDual
+	_check("asset demo de terra 32px escala para grid 16px", dirt_layer.tile_set.tile_size == Vector2i(32, 32) and dirt_layer.scale == Vector2(0.5, 0.5))
+	var saved_dirt_cells := dirt_layer.get_used_cells()
+	var saved_dirt_is_mapped := false
+	for saved_cell in saved_dirt_cells:
+		var saved_data := dirt_layer.get_cell_tile_data(saved_cell)
+		if saved_data != null and saved_data.terrain == 1 and dirt_layer.get_cell_atlas_coords(saved_cell) == Vector2i(2, 1):
+			saved_dirt_is_mapped = true
+			break
+	_check("terra inicial migra para o tile cheio oficial", saved_dirt_is_mapped)
 	# --- tillable (issue #5) ---------------------------------------------
 	_check("grama nao e aravel", not bool(g.call("is_tillable_cell", cell)))
 	_check("agua nao e aravel", not bool(g.call("is_tillable_cell", water_cell)))
@@ -96,3 +110,22 @@ func _tests() -> void:
 	_check("player tem apply_skin", player != null and player.has_method("apply_skin"))
 
 	print("DONE")
+
+
+func _check_dual_grid_rendering() -> void:
+	var water_layer := _game.get_node("TerrainWater") as TileMapDual
+	var water_cell := Vector2i(10, 7)
+	var dirt_cell := Vector2i(20, 21)
+	var water_is_rendered := false
+	var dirt_is_rendered := false
+	if water_layer.get_child_count() > 0:
+		for display_tile in water_layer.get_child(0).get_children():
+			if display_tile is TileMapLayer and display_tile.get_cell_source_id(water_cell) != -1:
+				water_is_rendered = true
+	_check("camada de display renderiza agua", water_is_rendered)
+	var dirt_layer := _game.get_node("TerrainDirt") as TileMapDual
+	if dirt_layer.get_child_count() > 0:
+		for display_tile in dirt_layer.get_child(0).get_children():
+			if display_tile is TileMapLayer and display_tile.get_cell_source_id(dirt_cell) != -1:
+				dirt_is_rendered = true
+	_check("camada de display renderiza o asset demo de terra", dirt_is_rendered)
